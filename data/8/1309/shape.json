@@ -10,6 +10,6 @@
   "tiles_with_reflections": null,
   "certificate": null,
   "heesch": null,
-  "budgets": {"box_max_volume":128,"torus_max_index":64},
+  "budgets": {"box_max_volume":128,"torus_max_index":152},
   "credits": {"solved_by":null,"verified_by":null,"prior_art":null}
 }
