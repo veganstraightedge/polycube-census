@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "census/box_search"
+require_relative "census/box_tiling"
 require_relative "census/data_writer"
 require_relative "census/enumeration"
 require_relative "census/oeis"
