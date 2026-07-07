@@ -24,3 +24,6 @@
 - `script/census --shard i/k`: parallel workers over disjoint shapes.
 - n=8 sweep (6-way parallel, Shane's terminal): 6,921 of 6,922 octacubes tile (383 box / 6,538 torus). Exactly one survivor: 8/1309, the flat 3x3 square ring — the holey octomino, a classic 2D non-tiler whose hole in 3D is an open channel rings can thread. 8,151 certificates verified.
 - 8/1309 stamped `open` after a raised-budget probe: provably no box through volume 128 (16 copies), no periodic block through index 64. The census's sole open question through n=8.
+- Overnight hunt: no periodic tiling through index 152 (19 rings per block), lattice orbit dedup (20x fewer solves).
+- `Surround` (corona-1) + `Corona` (depth-k Heesch test with Sinz AMO encoding, DRAT capture, live solver output).
+- THEOREM: 8/1309, the square ring, has Heesch number 1 and does not tile space — corona-1 SAT (28-copy verified witness), corona-2 UNSAT (reproduced by kissat and CaDiCaL; DRAT proof drat-trim VERIFIED). It is the unique smallest non-tiling polycube. The census through n=8 is complete: zero open shapes.

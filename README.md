@@ -34,10 +34,18 @@ Spectre: [Ayliean 1](https://youtu.be/IfVwelta1fE),
 ## Questions this aims to answer
 
 1. Do all 207 polycubes through `n = 6` tile space? (Folklore says yes, but folklore isn't proof.)
+   **Answered: yes — all 207 carry verified certificates.**
 2. What is the smallest polycube that does not tile space?
+   **Answered: [`8/1309`](data/8/1309/shape.json), the flat 3×3 square ring — the only
+   non-simply-connected polycube through `n = 8`, and the unique non-tiler among all
+   8,152 shapes. Every polycube with 1–7 cells tiles space.**
 3. What are the first 3D Heesch numbers? (AFAICT, no table of them already exists anywhere.)
+   **First entry recorded: the square ring has Heesch number 1 — it can be fully wrapped
+   once (28 copies, verified witness) but never twice (corona-2 UNSAT, reproduced by two
+   independent solvers, DRAT proof checked by drat-trim: `s VERIFIED`).**
 4. What is the smallest polycube that tiles only anisohedrally — never tile-transitively?
 5. Does anything through `n = 8` resist classification entirely?
+   **Answered: no. The census through `n = 8` is complete — zero open shapes.**
 
 ## How it works
 

@@ -5,11 +5,11 @@
   "symmetry_order": 8,
   "chiral": false,
   "mirror_id": "8/1309",
-  "verdict": "open",
-  "tiles_rotations_only": null,
-  "tiles_with_reflections": null,
-  "certificate": null,
-  "heesch": null,
-  "budgets": {"box_max_volume":128,"torus_max_index":152},
-  "credits": {"solved_by":null,"verified_by":null,"prior_art":null}
+  "verdict": "non_tiler",
+  "tiles_rotations_only": false,
+  "tiles_with_reflections": false,
+  "certificate": {"type":"heesch","heesch":1,"refutation":"cnf/corona2.drat"},
+  "heesch": 1,
+  "budgets": {"box_max_volume":128,"torus_max_index":152,"corona_depth":2},
+  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":"Shane Becker via drat-trim (s VERIFIED) and CaDiCaL, 2026-07-07","prior_art":null}
 }
