@@ -238,6 +238,36 @@ script/gallery    # emit STLs and renders
   Writing convention: keep standard math idioms (`iff`, coronas, anisohedral, …) in the
   text, and include a glossary footnote/appendix expanding them for non-mathematicians.
 
+## The square ring (8/1309): does chainmail tile?
+
+The census's sole open shape through n=8 — the flat 3×3 ring, the only
+non-simply-connected polycube in range. Resolution plan, in order:
+
+1. **Literature pass (done, preliminary).** 2026-07-06 searches found nothing
+   settling it: 2D octomino packings, interlocking-complexity results, chainmail
+   topology — but not this question. Deeper pass through puzzle literature
+   before writing anything up.
+2. **The surround test (corona 1).** One SAT instance: seed ring fixed, copies
+   touching it, every frontier cell (including the hole) covered, no overlaps.
+   UNSAT ⇒ Heesch 0 ⇒ certified non-tiler ⇒ the smallest non-tiling polycube
+   (headline theorem). Capture the DRAT proof on this run and check it with
+   drat-trim — that UNSAT would be the result. SAT ⇒ render the wrap, go deeper.
+3. **Heesch escalation.** Corona 2, 3, … until UNSAT at k+1: Heesch = k, first
+   nontrivial 3D Heesch number on record. Needs a scalable at-most-one encoding
+   (sequential counters, not pairwise) and tight region bounds.
+4. **Deeper periodic search, in parallel.** Torus index 72 → 96 → 128, after
+   deduplicating the lattice list under the 24 rotations (~order-of-magnitude
+   cut). A moderate-period tiling here flips the verdict to TILER.
+5. **Pen-and-paper track.** Counting argument: one hole per ring, one donated
+   cell per hole, and only the 4 edge-middle cells of a ring can sit in a hole
+   (hand-checked; corners cannot). Push toward a parity contradiction; even
+   partial results are lemmas. Print open-loop rings for physical intuition.
+
+If coronas stay SAT and tori stay UNSAT at large budgets: einstein-candidate
+protocol — maximum suspicion, honest budgets, publish the shortlist as OPEN.
+
+All solver runs are Shane's to execute; encodings and specs land here first.
+
 ## Someday / future
 
 - **Lean (formal verification), two hooks.** At M4: check solver UNSAT proofs with a
