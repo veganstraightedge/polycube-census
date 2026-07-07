@@ -60,6 +60,29 @@ RSpec.describe Census::Polycube do
     end
   end
 
+  describe "#unique_orientations" do
+    it "collapses the dicube's 24 rotations to 3 axes" do
+      expect(dicube.unique_orientations.size).to eq(3)
+    end
+
+    it "keeps 12 for the screw, whose only symmetry is a 180-degree flip" do
+      expect(screw_tetracube.unique_orientations.size).to eq(12)
+    end
+
+    it "always satisfies orientations times symmetry equals 24" do
+      products = [monocube, dicube, l_tricube, screw_tetracube].map do
+        it.unique_orientations.size * it.symmetry_order
+      end
+      expect(products).to all(eq(24))
+    end
+
+    it "pairs each orientation's cells with a rotation index that reproduces them" do
+      cells, rotation_index = l_tricube.unique_orientations.last
+      rotation = Census::Rotation.all.fetch(rotation_index)
+      expect(l_tricube.rotated(rotation).cells).to eq(cells)
+    end
+  end
+
   describe "#growths" do
     it "grows the monocube in six directions" do
       expect(monocube.growths.size).to eq(6)

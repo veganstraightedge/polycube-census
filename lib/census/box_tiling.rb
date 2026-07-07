@@ -26,15 +26,7 @@ module Census
     def volume_divisible? = (box.reduce(:*) % shape.size).zero?
 
     def all_placements
-      unique_orientations.flat_map { |cells, rotation| placements_of(cells, rotation) }
-    end
-
-    def unique_orientations
-      first_rotation_by_cells = {}
-      Rotation.all.each_with_index do |rotation, index|
-        first_rotation_by_cells[shape.rotated(rotation).cells] ||= index
-      end
-      first_rotation_by_cells.to_a
+      shape.unique_orientations.flat_map { |cells, rotation| placements_of(cells, rotation) }
     end
 
     def placements_of(cells, rotation)

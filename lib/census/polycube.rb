@@ -46,6 +46,14 @@ module Census
 
     def symmetry_order = Rotation.all.count { rotated(it).cells == cells }
 
+    def unique_orientations
+      first_rotation_by_cells = {}
+      Rotation.all.each_with_index do |rotation, index|
+        first_rotation_by_cells[rotated(rotation).cells] ||= index
+      end
+      first_rotation_by_cells.to_a
+    end
+
     def growths
       neighbors.map { |cell| self.class.new(cells: cells + [cell]) }
     end
