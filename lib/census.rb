@@ -5,6 +5,8 @@ require_relative "census/enumeration"
 require_relative "census/oeis"
 require_relative "census/polycube"
 require_relative "census/rotation"
+require_relative "census/sat/instance"
+require_relative "census/sat/kissat"
 require_relative "census/shape_record"
 
 module Census

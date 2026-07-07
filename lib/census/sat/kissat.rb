@@ -1,0 +1,41 @@
+# frozen_string_literal: true
+
+require "open3"
+require "tempfile"
+
+module Census
+  module SAT
+    # Runs the kissat solver on an Instance. Returns the set of true variables
+    # for a satisfiable instance, nil for an unsatisfiable one.
+    class Kissat
+      SATISFIABLE = 10
+      UNSATISFIABLE = 20
+
+      def self.solve(instance)
+        Tempfile.create(["census", ".cnf"]) do |file|
+          file.write(instance.to_dimacs)
+          file.flush
+          run(file.path)
+        end
+      end
+
+      def self.run(path)
+        output, status = Open3.capture2("kissat", "--quiet", path)
+        case status.exitstatus
+        when SATISFIABLE then true_variables(output)
+        when UNSATISFIABLE then nil
+        else raise "kissat failed with exit status #{status.exitstatus}"
+        end
+      end
+
+      def self.true_variables(output)
+        output.lines
+              .select { it.start_with?("v ") }
+              .flat_map { it.split.drop(1) }
+              .map { Integer(it) }
+              .select(&:positive?)
+              .to_set
+      end
+    end
+  end
+end

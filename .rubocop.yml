@@ -16,3 +16,6 @@ Style/StringLiterals:
 Metrics/BlockLength:
   Exclude:
     - spec/**/*
+
+RSpec/ExampleLength:
+  Max: 8
