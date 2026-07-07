@@ -1,1 +1,2 @@
+brew "cadical"
 brew "kissat"

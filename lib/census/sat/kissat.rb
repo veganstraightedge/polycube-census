@@ -11,7 +11,14 @@ module Census
       SATISFIABLE = 10
       UNSATISFIABLE = 20
 
-      def self.solve(instance, proof_path: nil, progress: nil)
+      # instance_path keeps the generated CNF on disk — a DRAT proof is only
+      # checkable against the exact formula it refutes.
+      def self.solve(instance, instance_path: nil, proof_path: nil, progress: nil)
+        if instance_path
+          File.write(instance_path, instance.to_dimacs)
+          return run(instance_path, proof_path:, progress:)
+        end
+
         Tempfile.create(["census", ".cnf"]) do |file|
           file.write(instance.to_dimacs)
           file.flush
@@ -22,7 +29,8 @@ module Census
       # With a progress IO, kissat runs un-quieted and its periodic statistics
       # lines stream there live; the verdict lines are parsed as usual.
       def self.run(path, proof_path: nil, progress: nil)
-        command = progress ? ["kissat", path] : ["kissat", "--quiet", path]
+        solver = ENV.fetch("CENSUS_SOLVER", "kissat")
+        command = progress ? [solver, path] : [solver, "--quiet", path]
         command << proof_path if proof_path
         return streamed(command, progress) if progress
 

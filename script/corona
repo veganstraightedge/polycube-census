@@ -22,10 +22,11 @@ sizes = corona.universes.map { |level, placements| "level #{level}: #{placements
 puts "#{id} depth #{depth} — candidate placements #{sizes}"
 
 FileUtils.mkdir_p("#{directory}/cnf")
+instance_path = "#{directory}/cnf/corona#{depth}.cnf"
 proof_path = "#{directory}/cnf/corona#{depth}.drat"
-puts "building clauses (silent for a minute or two), then live kissat statistics..."
+puts "building clauses (silent for a minute or two), then live solver statistics..."
 started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-witness = corona.solve(proof_path:, progress: $stdout)
+witness = corona.solve(instance_path:, proof_path:, progress: $stdout)
 elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).round(1)
 
 if witness
