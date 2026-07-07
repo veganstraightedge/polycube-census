@@ -229,9 +229,12 @@ script/gallery    # emit STLs and renders
   Moritz Firsching's code, independently verified by Georgios Papoutsis) —
   import their tilings as certificates with per-shape solver credits, and use the
   overlap as an external cross-check of our pipeline.
-- **M6 — Publish.** Paper ([Geombinatorics](https://geombina.uccs.edu) fits the genre;
-  arXiv math.CO/math.MG with endorsement), OEIS sequences, browsable gallery,
+- **M6 — Publish: gallery.** Browsable gallery generated from certificates,
   printed record-holders.
+- **M7 — Publish: OEIS.** New sequences submitted (number of n-polycubes that tile
+  a box, that tile space, non-tilers by Heesch number, …).
+- **M8 — Publish: paper.** [Geombinatorics](https://geombina.uccs.edu) fits the genre;
+  arXiv math.CO/math.MG with endorsement.
   Writing convention: keep standard math idioms (`iff`, coronas, anisohedral, …) in the
   text, and include a glossary footnote/appendix expanding them for non-mathematicians.
 
