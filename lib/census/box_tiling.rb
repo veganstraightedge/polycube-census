@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module Census
-  # Can copies of one shape fill an a×b×c box? Encoded as exact cover:
-  # one SAT variable per placement, every box cell covered exactly once.
-  # Returns the chosen placements (rotation index + offset) or nil.
+  # Can copies of one shape fill an a×b×c box? One SAT variable per placement,
+  # every box cell covered exactly once. Returns the chosen placements
+  # (rotation index + offset) or nil.
   class BoxTiling
     def initialize(box:, shape:)
       @box = box
@@ -13,10 +13,7 @@ module Census
     def solve
       return nil unless volume_divisible?
 
-      placements = all_placements
-      return nil if placements.empty?
-
-      solve_instance(placements)
+      SAT::ExactCover.new(placements: all_placements, universe: box_cells).solve
     end
 
     private
@@ -42,46 +39,8 @@ module Census
       cells.transpose.map(&:max).zip(box).map { |extent, limit| (0..(limit - 1 - extent)).to_a }
     end
 
-    def solve_instance(placements)
-      instance = SAT::Instance.new
-      variables = placements.map { instance.new_variable }
-      covering = covering_variables(placements, variables)
-      return nil if covering.any? { |_cell, covering_variables| covering_variables.empty? }
-
-      add_clauses(instance, covering)
-      model = SAT::Kissat.solve(instance)
-      model && chosen(placements, variables, model)
-    end
-
-    def covering_variables(placements, variables)
-      covering = box_cells.to_h { [it, []] }
-      placements.each_with_index do |placement, position|
-        placement[:cells].each { covering.fetch(it) << variables[position] }
-      end
-      covering
-    end
-
     def box_cells
       (0...box[0]).to_a.product((0...box[1]).to_a, (0...box[2]).to_a)
-    end
-
-    def add_clauses(instance, covering)
-      covering.each_value { instance.add_clause(it) }
-      overlapping_pairs(covering).each { |one, other| instance.add_clause([-one, -other]) }
-    end
-
-    def overlapping_pairs(covering)
-      pairs = Set.new
-      covering.each_value do |cell_variables|
-        cell_variables.combination(2) { pairs << it.sort }
-      end
-      pairs
-    end
-
-    def chosen(placements, variables, model)
-      placements.zip(variables)
-                .select { |_placement, variable| model.include?(variable) }
-                .map { |placement, _variable| placement.slice(:rotation, :offset) }
     end
   end
 end
