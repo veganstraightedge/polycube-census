@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Generate 3D files beside every record. Usage: script/gallery [max_n]
+#
+# - model.stl        every shape — watertight, printable
+# - tiling.obj/.mtl  tilers — a chunk of the certified tiling, one color per copy
+# - corona.obj/.mtl  non-tilers with a corona witness — the maximal wrap
+
+require_relative "../lib/census"
+
+max_size = Integer(ARGV.fetch(0, "8"))
+root = File.expand_path("../data", __dir__)
+written = 0
+
+(1..max_size).each do |size|
+  paths = Dir.glob(File.join(root, size.to_s, "*", "shape.json"))
+              .sort_by { Integer(File.basename(File.dirname(it))) }
+  paths.each do |path|
+    directory = File.dirname(path)
+    record = JSON.parse(File.read(path), symbolize_names: true)
+    shape = Census::Polycube.new(cells: record[:cells])
+
+    File.write("#{directory}/model.stl", Census::STL.model(cells: shape.cells, name: record[:id].tr("/", "-")))
+
+    if record[:certificate] && %w[box torus].include?(record[:certificate][:type])
+      groups = Census::Assembly.groups_for(certificate: record[:certificate], shape:)
+      result = Census::OBJ.assembly(groups:, name: "tiling")
+      File.write("#{directory}/tiling.obj", result[:obj])
+      File.write("#{directory}/tiling.mtl", result[:mtl])
+    end
+
+    witness_path = "#{directory}/corona1.json"
+    if record[:verdict] == "non_tiler" && File.exist?(witness_path)
+      placements = JSON.parse(File.read(witness_path), symbolize_names: true)
+      groups = [{ name: "seed", cells: shape.cells }]
+      placements.each_with_index do |placement, index|
+        groups << { name: "copy_#{index + 1}", cells: Census::Assembly.placed_cells(placement, shape) }
+      end
+      result = Census::OBJ.assembly(groups:, name: "corona")
+      File.write("#{directory}/corona.obj", result[:obj])
+      File.write("#{directory}/corona.mtl", result[:mtl])
+    end
+
+    written += 1
+    puts "#{record[:id]}  (#{written} done)" if (written % 500).zero?
+  end
+end
+
+puts "gallery written for #{written} shapes through n=#{max_size}"
