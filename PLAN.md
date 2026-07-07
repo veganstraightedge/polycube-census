@@ -238,6 +238,18 @@ script/gallery    # emit STLs and renders
   Writing convention: keep standard math idioms (`iff`, coronas, anisohedral, …) in the
   text, and include a glossary footnote/appendix expanding them for non-mathematicians.
 
+## Someday / future
+
+- **Lean (formal verification), two hooks.** At M4: check solver UNSAT proofs with a
+  formally verified checker (Lean 4's LRAT checker or cake_lpr) for headline claims —
+  drat-trim is itself unverified C. Post-M8 stretch: formalize the encoding's
+  soundness ("CNF UNSAT ⇒ no tiling of ℤ³") in Lean, making the smallest-non-tiler
+  result a fully machine-checked theorem; potential Lean-community collaboration.
+- **Manim visualizations + YouTube.** After M6, use the census as source material for
+  Manim animations (tilings assembling, coronas growing and getting stuck) and a video
+  or few. Certificates are the animation data — placements are keyframes — so this
+  stays a pure consumer of `data/` and needs nothing from the pipeline now.
+
 ## Risks and open questions
 
 - **Scoop / prior-art risk.** The folklore claim and the unanswered forum question
