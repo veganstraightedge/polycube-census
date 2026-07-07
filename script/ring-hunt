@@ -1,53 +1,87 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Deep periodic hunt for one open shape. Usage: script/ring-hunt 8/1309 128
+# Deep periodic hunt for one open shape.
 #
-# Tries every sublattice at rising index (multiples of the shape size),
-# starting just above the record's certified torus budget. After each fully
-# refuted index the record's budget is raised — every completed index is new
-# certified information. If a tiling appears: verify, stamp TILER, stop.
-# Safe to Ctrl-C anytime and rerun; it resumes from the recorded budget.
+#   script/ring-hunt 8/1309 160                # single process
+#   script/ring-hunt 8/1309 160 --shard 3/7    # one of 7 parallel workers
+#
+# Walks lattice indices upward (multiples of the shape size) from the record's
+# certified budget. A single process stamps the record's budget after each
+# refuted index. Sharded workers split each index's lattices and write their
+# own progress to <shape dir>/hunt/shard-*.json — an index counts as refuted
+# only once every shard has refuted it; reconcile and stamp after the run.
+# A found tiling is verified and stamped immediately by whichever worker sees
+# it. Safe to Ctrl-C anytime and rerun.
 
+require "fileutils"
+require "time"
 require_relative "../lib/census"
 
-id = ARGV.fetch(0)
-max_index = Integer(ARGV.fetch(1))
+def timestamp = Time.now.strftime("%H:%M:%S")
+
+arguments = ARGV.dup
+shard_index, shard_count = if (position = arguments.index("--shard"))
+                             arguments.delete_at(position)
+                             arguments.delete_at(position).split("/").map { Integer(it) }
+                           else
+                             [1, 1]
+                           end
+id = arguments.fetch(0)
+max_index = Integer(arguments.fetch(1))
+
 path = File.expand_path("../data/#{id}/shape.json", __dir__)
 record = JSON.parse(File.read(path), symbolize_names: true)
 shape = Census::Polycube.new(cells: record[:cells])
+sharded = shard_count > 1
+hunt_directory = File.expand_path("../data/#{id}/hunt", __dir__)
+FileUtils.mkdir_p(hunt_directory) if sharded
 
 certified = record[:budgets][:torus_max_index] || 0
-index = (certified / shape.size + 1) * shape.size
+index = ((certified / shape.size) + 1) * shape.size
+puts "#{timestamp}  shard #{shard_index}/#{shard_count}: resuming above certified index #{certified}"
 
 while index <= max_index
   lattices = Census::Lattice.all_of_index(index)
-  puts "#{Time.now.strftime('%H:%M:%S')}  index #{index}: trying #{lattices.size} lattices"
+  mine = lattices.each_with_index
+                 .select { |_lattice, position| position % shard_count == shard_index % shard_count }
+                 .map(&:first)
+  puts "#{timestamp}  index #{index}: #{mine.size} of #{lattices.size} lattices are mine"
 
-  lattices.each do |lattice|
+  mine.each_with_index do |lattice, position|
+    puts "#{timestamp}  index #{index}: #{position}/#{mine.size}" if position.positive? && (position % 500).zero?
+
     placements = Census::TorusTiling.new(lattice:, shape:).solve
     next unless placements
 
     certificate = { type: "torus", lattice: lattice.basis, placements: }
     raise "tiling failed verification" unless Census::Verifier.new(certificate:, shape:).valid?
 
-    record.merge!(
-      verdict: "tiler",
-      tiles_rotations_only: true,
-      tiles_with_reflections: true,
-      certificate:,
-      budgets: record[:budgets].merge(torus_max_index: index),
-      credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION}")
-    )
-    File.write(path, Census::JSONDocument.generate(record))
-    puts "TILING FOUND at index #{index} — verified and stamped. Chainmail tiles space."
+    fresh = JSON.parse(File.read(path), symbolize_names: true)
+    unless fresh[:verdict] == "tiler"
+      fresh.merge!(
+        verdict: "tiler",
+        tiles_rotations_only: true,
+        tiles_with_reflections: true,
+        certificate:,
+        budgets: fresh[:budgets].merge(torus_max_index: index),
+        credits: fresh[:credits].merge(solved_by: "polycube-census v#{Census::VERSION}")
+      )
+      File.write(path, Census::JSONDocument.generate(fresh))
+    end
+    puts "#{timestamp}  TILING FOUND at index #{index} — verified and stamped. Chainmail tiles space."
     exit 0
   end
 
-  record[:budgets] = record[:budgets].merge(torus_max_index: index)
-  File.write(path, Census::JSONDocument.generate(record))
-  puts "#{Time.now.strftime('%H:%M:%S')}  index #{index} refuted — certified budget raised"
+  if sharded
+    state = { shard: "#{shard_index}/#{shard_count}", refuted_through: index, at: Time.now.iso8601 }
+    File.write("#{hunt_directory}/shard-#{shard_index}-of-#{shard_count}.json", "#{JSON.generate(state)}\n")
+  else
+    record[:budgets] = record[:budgets].merge(torus_max_index: index)
+    File.write(path, Census::JSONDocument.generate(record))
+  end
+  puts "#{timestamp}  index #{index} refuted by this shard"
   index += shape.size
 end
 
-puts "No tiling through index #{max_index}. The ring holds out."
+puts "#{timestamp}  shard #{shard_index}/#{shard_count}: done — no tiling through index #{max_index}"
