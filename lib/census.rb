@@ -10,6 +10,7 @@ require_relative "census/rotation"
 require_relative "census/sat/instance"
 require_relative "census/sat/kissat"
 require_relative "census/shape_record"
+require_relative "census/verifier"
 
 module Census
 end
