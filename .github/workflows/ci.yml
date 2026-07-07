@@ -13,5 +13,9 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      - run: brew bundle
+      # Brewfile covers local macOS setup; runners build kissat from source.
+      - run: |
+          git clone --depth 1 https://github.com/arminbiere/kissat /tmp/kissat
+          cd /tmp/kissat && ./configure && make -j
+          echo "/tmp/kissat/build" >> "$GITHUB_PATH"
       - run: script/cibuild
