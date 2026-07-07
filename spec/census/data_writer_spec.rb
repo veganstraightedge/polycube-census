@@ -4,11 +4,9 @@ require "tmpdir"
 
 RSpec.describe Census::DataWriter do
   describe "#write" do
-    it "writes one folder per shape with contents matching the fixture" do
+    it "writes one folder per shape" do
       Dir.mktmpdir do |root|
-        enumeration = Census::Enumeration.new(max_size: 3)
-        described_class.new(root:).write(enumeration)
-
+        described_class.new(root:).write(Census::Enumeration.new(max_size: 3))
         written = Dir.glob("*/*/shape.json", base: root).sort
         expect(written).to eq(["1/1/shape.json", "2/1/shape.json", "3/1/shape.json", "3/2/shape.json"])
       end
@@ -16,9 +14,7 @@ RSpec.describe Census::DataWriter do
 
     it "writes the L-tricube byte-identical to the fixture" do
       Dir.mktmpdir do |root|
-        enumeration = Census::Enumeration.new(max_size: 3)
-        described_class.new(root:).write(enumeration)
-
+        described_class.new(root:).write(Census::Enumeration.new(max_size: 3))
         expect(File.read(File.join(root, "3/2/shape.json"))).to eq(File.read("spec/fixtures/3/2/shape.json"))
       end
     end

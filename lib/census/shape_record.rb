@@ -18,14 +18,28 @@ module Census
 
     def mirror_id = "#{shape.size}/#{mirror_index}"
 
-    def to_h
+    def to_h = geometry_fields.merge(verdict_fields)
+
+    def to_json_document
+      fields = to_h.map { |key, value| %(  "#{key}": #{JSON.generate(value)}) }
+      "{\n#{fields.join(",\n")}\n}\n"
+    end
+
+    private
+
+    def geometry_fields
       {
         id:,
         n: shape.size,
         cells: shape.cells,
         symmetry_order: shape.symmetry_order,
         chiral: shape.chiral?,
-        mirror_id:,
+        mirror_id:
+      }
+    end
+
+    def verdict_fields
+      {
         verdict: nil,
         tiles_rotations_only: nil,
         tiles_with_reflections: nil,
@@ -34,11 +48,6 @@ module Census
         budgets: {},
         credits: { solved_by: nil, verified_by: nil, prior_art: nil }
       }
-    end
-
-    def to_json_document
-      fields = to_h.map { |key, value| %(  "#{key}": #{JSON.generate(value)}) }
-      "{\n#{fields.join(",\n")}\n}\n"
     end
   end
 end
