@@ -219,7 +219,7 @@ script/gallery    # emit STLs and renders
 - **M2 — SAT plumbing.** Box + torus stages working; all shapes n ≤ 4 certified,
   results hand-checkable (screws pair into a 2×2×2 cube, etc.).
 - **M3 — Folklore certified.** All 207 shapes through n=6 carry `TILER` certificates.
-  Publishable as a note + first OEIS submissions ("number of n-polycubes that tile a box").
+  (Publishing anything, incl. OEIS submissions, waits until after M5 — see M6–M8.)
 - **M4 — The heptacube sweep.** All 1,023 n=7 shapes resolved or budgeted-OPEN.
   Headline: smallest non-tiler (or proof all heptacubes tile), first 3D Heesch table.
   This is the paper.
@@ -253,11 +253,11 @@ script/gallery    # emit STLs and renders
 ## Risks and open questions
 
 - **Scoop / prior-art risk.** The folklore claim and the unanswered forum question
-  suggest this is unclaimed, but do a real literature pass before M3 and ask the
-  community (Poly Pages maintainer,
+  suggest this is unclaimed. Passive literature searches (which reveal nothing)
+  continue throughout. Active outreach — Poly Pages maintainer,
   [the tiling group thread](https://www.facebook.com/groups/tiling/posts/1150714768685400),
-  Kaplan — whose recent
-  papers signal interest in exactly this tooling). Week-1 task, not an afterthought.
+  Kaplan — is deliberately deferred until after n=8 is done (decided 2026-07-06):
+  math first, packaging and comms after, with results in hand.
 - **Corona SAT blowup in 3D.** Placement universes grow much faster than in 2D.
   Mitigations: tight radius bounds, incremental solving, aggressive symmetry breaking
   on the seed. Unknown until measured — measure early on a few n=7 shapes.
