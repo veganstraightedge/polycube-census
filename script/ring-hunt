@@ -42,7 +42,7 @@ index = ((certified / shape.size) + 1) * shape.size
 puts "#{timestamp}  shard #{shard_index}/#{shard_count}: resuming above certified index #{certified}"
 
 while index <= max_index
-  lattices = Census::Lattice.all_of_index(index)
+  lattices = Census::Lattice.orbit_representatives_of_index(index)
   mine = lattices.each_with_index
                  .select { |_lattice, position| position % shard_count == shard_index % shard_count }
                  .map(&:first)

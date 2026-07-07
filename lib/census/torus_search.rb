@@ -13,7 +13,7 @@ module Census
 
     def certificate
       indices.each do |index|
-        Lattice.all_of_index(index).each do |lattice|
+        Lattice.orbit_representatives_of_index(index).each do |lattice|
           placements = TorusTiling.new(lattice:, shape:).solve
           return { type: "torus", lattice: lattice.basis, placements: } if placements
         end

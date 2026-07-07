@@ -15,6 +15,38 @@ RSpec.describe Census::Lattice do
     end
   end
 
+  describe ".hermite_normal_form" do
+    it "recovers the canonical basis from a scrambled one" do
+      scrambled = [[3, 1, 0], [2, 0, 0], [0, 0, 1]]
+      expect(described_class.hermite_normal_form(scrambled)).to eq([[2, 0, 0], [1, 1, 0], [0, 0, 1]])
+    end
+
+    it "leaves an already-canonical basis unchanged" do
+      canonical = [[2, 0, 0], [1, 2, 0], [1, 1, 3]]
+      expect(described_class.hermite_normal_form(canonical)).to eq(canonical)
+    end
+
+    it "handles negative entries" do
+      expect(described_class.hermite_normal_form([[-2, 0, 0], [0, 1, 0], [0, 0, 1]]))
+        .to eq([[2, 0, 0], [0, 1, 0], [0, 0, 1]])
+    end
+  end
+
+  describe ".orbit_representatives_of_index" do
+    it "collapses the 7 index-2 sublattices into 3 rotation orbits" do
+      expect(described_class.orbit_representatives_of_index(2).size).to eq(3)
+    end
+  end
+
+  describe "#orbit_key" do
+    it "is shared by a lattice and its rotations" do
+      lattice = described_class.new(basis: [[2, 0, 0], [1, 1, 0], [0, 0, 1]])
+      rotation = Census::Rotation.all.fetch(5)
+      rotated = described_class.new(basis: described_class.hermite_normal_form(lattice.basis.map { rotation.apply(it) }))
+      expect(rotated.orbit_key).to eq(lattice.orbit_key)
+    end
+  end
+
   describe "#reduce" do
     it "wraps coordinates into the diagonal box" do
       doubled = described_class.new(basis: [[2, 0, 0], [0, 2, 0], [0, 0, 2]])
