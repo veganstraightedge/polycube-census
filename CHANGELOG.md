@@ -8,3 +8,5 @@
 - `Enumeration`: generates all free polycubes per size; verified against OEIS A000162 and A038119.
 - `ShapeRecord` + `DataWriter`: one `data/<n>/<index>/shape.json` per shape, stable lexicographic indices, chiral twins cross-linked.
 - `script/enumerate`: full run through n=8 — 8,152 shapes written, all counts matching OEIS (M1 complete).
+- Public README.
+- GitHub Actions CI (`script/cibuild`: specs + linter).
