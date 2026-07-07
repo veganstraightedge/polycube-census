@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Render a solid chunk of a certified periodic tiling. Usage: script/tiling-chunk 5/16
+#
+# Draws every complete copy that touches a central window, so the middle of
+# the render is gap-free and the repetition is visible; verifies that the
+# window's core really is covered exactly once before writing.
+
+require_relative "../lib/census"
+
+id = ARGV.fetch(0)
+directory = File.expand_path("../data/#{id}", __dir__)
+record = JSON.parse(File.read("#{directory}/shape.json"), symbolize_names: true)
+certificate = record[:certificate]
+abort "#{id} has no torus certificate (box tilings stack plainly)" unless certificate&.dig(:type) == "torus"
+
+shape = Census::Polycube.new(cells: record[:cells])
+basis = certificate[:lattice]
+base_copies = certificate[:placements].map { Census::Assembly.placed_cells(it, shape) }
+
+extent = shape.cells.transpose.map(&:max).max + 1
+domain_cells = base_copies.flatten(1)
+window_minimum = domain_cells.transpose.map { it.min - extent }
+window_maximum = domain_cells.transpose.map { it.max + extent }
+
+copies = []
+range = (-4..4).to_a
+range.product(range, range) do |a, b, c|
+  shift = (0..2).map { (a * basis[0][it]) + (b * basis[1][it]) + (c * basis[2][it]) }
+  base_copies.each do |cells|
+    copies << cells.map { |cell| cell.zip(shift).map(&:sum) }
+  end
+end
+
+core_minimum = window_minimum.map { it + extent }
+core_maximum = window_maximum.map { it - extent }
+coverage = Hash.new(0)
+copies.each { |cells| cells.each { coverage[it] += 1 } }
+core = (core_minimum[0]..core_maximum[0]).to_a
+       .product((core_minimum[1]..core_maximum[1]).to_a, (core_minimum[2]..core_maximum[2]).to_a)
+bad = core.reject { coverage[it] == 1 }
+abort "COVERAGE FAILED for #{bad.size} core cells — enlarge the range" if bad.any?
+puts "core verified: #{core.size} cells each covered exactly once"
+
+visible = copies.select do |cells|
+  cells.any? { |cell| cell.zip(window_minimum, window_maximum).all? { |value, low, high| value.between?(low, high) } }
+end
+groups = visible.each_with_index.map { |cells, index| { name: "copy_#{index + 1}", cells: } }
+result = Census::OBJ.assembly(groups:, name: "tiling-chunk")
+File.write("#{directory}/tiling-chunk.obj", result[:obj])
+File.write("#{directory}/tiling-chunk.mtl", result[:mtl])
+puts "#{id}: #{visible.size} complete copies drawn -> #{directory}/tiling-chunk.obj"
