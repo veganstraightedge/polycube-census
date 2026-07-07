@@ -3,8 +3,5 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-if ! command -v kissat > /dev/null; then
-  brew install kissat
-fi
-
+brew bundle
 bundle install
