@@ -11,16 +11,18 @@ module Census
       SATISFIABLE = 10
       UNSATISFIABLE = 20
 
-      def self.solve(instance)
+      def self.solve(instance, proof_path: nil)
         Tempfile.create(["census", ".cnf"]) do |file|
           file.write(instance.to_dimacs)
           file.flush
-          run(file.path)
+          run(file.path, proof_path:)
         end
       end
 
-      def self.run(path)
-        output, status = Open3.capture2("kissat", "--quiet", path)
+      def self.run(path, proof_path: nil)
+        command = ["kissat", "--quiet", path]
+        command << proof_path if proof_path
+        output, status = Open3.capture2(*command)
         case status.exitstatus
         when SATISFIABLE then true_variables(output)
         when UNSATISFIABLE then nil
