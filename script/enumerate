@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Enumerate all polycubes up to N cells (default 8), verify counts against
+# OEIS A000162/A038119, then write data/<n>/<index>/shape.json.
+
+require_relative "../lib/census"
+
+max_size = Integer(ARGV.fetch(0, "8"))
+enumeration = Census::Enumeration.new(max_size:)
+
+mismatches = []
+(1..max_size).each do |size|
+  shape_count = enumeration.shapes_of(size).size
+  class_count = enumeration.mirror_classes_of(size).size
+  expected_shapes = Census::Oeis::A000162.fetch(size - 1)
+  expected_classes = Census::Oeis::A038119.fetch(size - 1)
+  agreed = shape_count == expected_shapes && class_count == expected_classes
+  mismatches << size unless agreed
+  puts format(
+    "n=%d  shapes %d (oeis %d)  mirror-classes %d (oeis %d)  %s",
+    size, shape_count, expected_shapes, class_count, expected_classes, agreed ? "ok" : "MISMATCH"
+  )
+end
+
+abort "Enumeration disagrees with OEIS: n=#{mismatches.join(', ')}" if mismatches.any?
+
+Census::DataWriter.new(root: File.expand_path("../data", __dir__)).write(enumeration)
+puts "Wrote data/ through n=#{max_size}"

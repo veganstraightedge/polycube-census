@@ -1,0 +1,15 @@
+{
+  "id": "8/735",
+  "n": 8,
+  "cells": [[0,0,0],[0,0,1],[0,0,2],[0,0,3],[0,1,2],[0,1,3],[0,1,4],[1,0,1]],
+  "symmetry_order": 1,
+  "chiral": true,
+  "mirror_id": "8/697",
+  "verdict": null,
+  "tiles_rotations_only": null,
+  "tiles_with_reflections": null,
+  "certificate": null,
+  "heesch": null,
+  "budgets": {},
+  "credits": {"solved_by":null,"verified_by":null,"prior_art":null}
+}

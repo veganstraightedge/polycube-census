@@ -1,0 +1,15 @@
+{
+  "id": "7/100",
+  "n": 7,
+  "cells": [[0,0,0],[0,0,1],[0,0,2],[0,0,3],[0,1,1],[0,2,1],[1,0,0]],
+  "symmetry_order": 1,
+  "chiral": true,
+  "mirror_id": "7/76",
+  "verdict": null,
+  "tiles_rotations_only": null,
+  "tiles_with_reflections": null,
+  "certificate": null,
+  "heesch": null,
+  "budgets": {},
+  "credits": {"solved_by":null,"verified_by":null,"prior_art":null}
+}

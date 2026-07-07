@@ -1,0 +1,15 @@
+{
+  "id": "4/5",
+  "n": 4,
+  "cells": [[0,0,0],[0,0,1],[0,1,0],[1,0,0]],
+  "symmetry_order": 3,
+  "chiral": false,
+  "mirror_id": "4/5",
+  "verdict": null,
+  "tiles_rotations_only": null,
+  "tiles_with_reflections": null,
+  "certificate": null,
+  "heesch": null,
+  "budgets": {},
+  "credits": {"solved_by":null,"verified_by":null,"prior_art":null}
+}
