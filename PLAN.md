@@ -71,7 +71,7 @@ Each shape runs through increasingly expensive stages; stop at the first certifi
 - **Stage 2 — box tiling.** Exact cover of an a×b×c box by all placements of all
   orientations. Try boxes in increasing volume (multiples of n) up to budget.
   Certificate: placement list. Cross-validate against
-  [BurrTools](https://burrtools.sourceforge.net/) on a sample.
+  [BurrTools](https://burrtools.sourceforge.net) on a sample.
 - **Stage 3 — periodic tiling (torus SAT).** Tile the quotient ℤ³/L for sublattices L,
   enumerated by Hermite normal form in increasing index (index a multiple of n).
   Skew lattices matter: periodic tilings need not have orthogonal periods, and
@@ -164,7 +164,7 @@ permanent, citable name for a shape.
 `cells` is the canonical form: translate to the origin corner, take the
 lexicographically minimal cell list over all 24 rotations.
 
-Credits follow the [WHUTS](https://whuts.org/) model: every verdict names its solver
+Credits follow the [WHUTS](https://whuts.org) model: every verdict names its solver
 (a human, or the pipeline at a specific version) and, once someone independently
 rechecks it, its verifier. Where a shape was already settled by prior work — the
 261 tesseract unfoldings on WHUTS, hand-found Poly Pages patterns — import the
@@ -184,7 +184,7 @@ Trust nothing from the solver directly:
   record-holders and headline facts only —
   proof files are huge.
 - Global sanity check: enumeration counts must reproduce
-  [OEIS](https://oeis.org/) (Online Encyclopedia of Integer Sequences)
+  [OEIS](https://oeis.org) (Online Encyclopedia of Integer Sequences)
   [A000162](https://oeis.org/A000162) and [A038119](https://oeis.org/A038119)
   exactly before anything downstream runs.
 
@@ -225,11 +225,11 @@ script/gallery    # emit STLs and renders
   This is the paper.
 - **M5 — n=8.** Records hunt: max 3D Heesch, first anisohedral, shortlist growth.
   Includes the 261 tesseract unfoldings already settled by the
-  [WHUTS](https://whuts.org/) community (all tile; solutions collected via
+  [WHUTS](https://whuts.org) community (all tile; solutions collected via
   Moritz Firsching's code, independently verified by Georgios Papoutsis) —
   import their tilings as certificates with per-shape solver credits, and use the
   overlap as an external cross-check of our pipeline.
-- **M6 — Publish.** Paper ([Geombinatorics](https://geombina.uccs.edu/) fits the genre;
+- **M6 — Publish.** Paper ([Geombinatorics](https://geombina.uccs.edu) fits the genre;
   arXiv math.CO/math.MG with endorsement), OEIS sequences, browsable gallery,
   printed record-holders.
   Writing convention: keep standard math idioms (`iff`, coronas, anisohedral, …) in the
@@ -240,7 +240,7 @@ script/gallery    # emit STLs and renders
 - **Scoop / prior-art risk.** The folklore claim and the unanswered forum question
   suggest this is unclaimed, but do a real literature pass before M3 and ask the
   community (Poly Pages maintainer,
-  [the tiling group thread](https://www.facebook.com/groups/tiling/posts/1150714768685400/),
+  [the tiling group thread](https://www.facebook.com/groups/tiling/posts/1150714768685400),
   Kaplan — whose recent
   papers signal interest in exactly this tooling). Week-1 task, not an afterthought.
 - **Corona SAT blowup in 3D.** Placement universes grow much faster than in 2D.
