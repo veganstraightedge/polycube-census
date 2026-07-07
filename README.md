@@ -18,7 +18,7 @@ Every polycube through `n = 8` cells gets exactly one:
 
 | Verdict     | Meaning                                   | Certificate                                        |
 | ----------- | ----------------------------------------- | -------------------------------------------------- |
-| `TILES`     | fills all of space                        | a repeating block you can verify by hand or script |
+| `TILER`     | fills all of space                        | a repeating block you can verify by hand or script |
 | `NON_TILER` | provably cannot tile                      | an exhausted maximal corona (its Heesch number)    |
 | `OPEN`      | survived every test within stated budgets | the budgets themselves                             |
 
@@ -79,7 +79,7 @@ are generated from certificates and land beside each record.
 
 - [x] **M1 — Enumeration.** All 8,152 shapes through `n = 8` with counts matching OEIS [A000162](https://oeis.org/A000162) and [A038119](https://oeis.org/A038119) exactly.
 - [ ] **M2 — SAT plumbing.** Box and torus stages with everything through `n = 4` certified.
-- [ ] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILES` certificates.
+- [ ] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILER` certificates.
 - [ ] **M4 — The heptacube sweep.** All 1,023 `n = 7` shapes resolved with smallest non-tiler found or ruled out at this size.
 - [ ] **M5 — N8.** Records hunt, including cross-checking the 261 tesseract unfoldings settled by [WHUTS](https://whuts.org).
 - [ ] **M6 — Publish.** Browsable gallery.

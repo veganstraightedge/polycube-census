@@ -10,7 +10,7 @@ which has no 3D counterpart.
 
 For every polycube up to size 8, produce a verdict with a machine-checkable certificate:
 
-- `TILES` — with the strongest certificate found (translation lattice, box, or periodic block)
+- `TILER` — with the strongest certificate found (translation lattice, box, or periodic block)
 - `NON_TILER` — with its 3D Heesch number and the frozen maximal corona
 - `OPEN` — survived all tests within documented budgets (the interesting shortlist)
 
@@ -139,7 +139,7 @@ permanent, citable name for a shape.
   "symmetry_order": 1,
   "chiral": true,
   "mirror_id": "7/413",
-  "verdict": "tiles",
+  "verdict": "tiler",
   "tiles_rotations_only": true,
   "tiles_with_reflections": true,
   "certificate": {
@@ -218,7 +218,7 @@ script/gallery    # emit STLs and renders
   counts match A000162/A038119. Acceptance: `script/enumerate 8` reproduces OEIS.
 - **M2 — SAT plumbing.** Box + torus stages working; all shapes n ≤ 4 certified,
   results hand-checkable (screws pair into a 2×2×2 cube, etc.).
-- **M3 — Folklore certified.** All 207 shapes through n=6 carry `TILES` certificates.
+- **M3 — Folklore certified.** All 207 shapes through n=6 carry `TILER` certificates.
   Publishable as a note + first OEIS submissions ("number of n-polycubes that tile a box").
 - **M4 — The heptacube sweep.** All 1,023 n=7 shapes resolved or budgeted-OPEN.
   Headline: smallest non-tiler (or proof all heptacubes tile), first 3D Heesch table.
