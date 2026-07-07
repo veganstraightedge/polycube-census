@@ -33,6 +33,15 @@ RSpec.describe Census::Pipeline do
       end
     end
 
+    it "falls back to the torus stage when the box budget is too small" do
+      Dir.mktmpdir do |root|
+        Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 3))
+        described_class.new(root:, max_volume: 4, max_index: 6).run(max_size: 3)
+        record = JSON.parse(File.read(File.join(root, "3/2/shape.json")), symbolize_names: true)
+        expect(record[:certificate][:type]).to eq("torus")
+      end
+    end
+
     it "skips shapes that already carry a verdict" do
       Dir.mktmpdir do |root|
         Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 1))

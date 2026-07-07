@@ -11,7 +11,8 @@ module Census
 
     def valid?
       case certificate[:type]
-      when "box" then valid_box?
+      when "box"   then valid_box?
+      when "torus" then valid_torus?
       else false
       end
     end
@@ -23,6 +24,12 @@ module Census
     def valid_box?
       cells = placed_cells
       cells.size == box_volume && cells.uniq.size == cells.size && cells.all? { inside_box?(it) }
+    end
+
+    def valid_torus?
+      lattice = Lattice.new(basis: certificate[:lattice])
+      covered = placed_cells.map { lattice.reduce(it) }
+      covered.sort == lattice.quotient_cells.sort
     end
 
     def placed_cells

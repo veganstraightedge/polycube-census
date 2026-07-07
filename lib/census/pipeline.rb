@@ -4,8 +4,9 @@ module Census
   # Runs the certificate stages over every unresolved shape.json under root,
   # verifying and stamping verdicts as it goes. Yields one line per solved shape.
   class Pipeline
-    def initialize(root:, max_volume: BoxSearch::DEFAULT_MAX_VOLUME)
+    def initialize(root:, max_index: TorusSearch::DEFAULT_MAX_INDEX, max_volume: BoxSearch::DEFAULT_MAX_VOLUME)
       @root = Pathname(root)
+      @max_index = max_index
       @max_volume = max_volume
     end
 
@@ -17,7 +18,7 @@ module Census
 
     private
 
-    attr_reader :max_volume, :root
+    attr_reader :max_index, :max_volume, :root
 
     def record_paths(size)
       Dir.glob(root.join(size.to_s, "*", "shape.json").to_s)
@@ -29,11 +30,19 @@ module Census
       return if record[:verdict]
 
       shape = Polycube.new(cells: record[:cells])
-      certificate = BoxSearch.new(shape:, max_volume:).certificate
+      certificate = BoxSearch.new(shape:, max_volume:).certificate ||
+                    TorusSearch.new(shape:, max_index:).certificate
       return unless certificate
 
       stamp(path, record, shape, certificate)
-      report&.call("#{record[:id]}  tiler  box #{certificate[:box].join('x')}")
+      report&.call("#{record[:id]}  tiler  #{describe(certificate)}")
+    end
+
+    def describe(certificate)
+      case certificate[:type]
+      when "box"   then "box #{certificate[:box].join('x')}"
+      when "torus" then "torus index #{Lattice.new(basis: certificate[:lattice]).index}"
+      end
     end
 
     def stamp(path, record, shape, certificate)
@@ -48,7 +57,7 @@ module Census
         tiles_rotations_only: true,
         tiles_with_reflections: true,
         certificate:,
-        budgets: { box_max_volume: max_volume },
+        budgets: { box_max_volume: max_volume, torus_max_index: max_index },
         credits: record[:credits].merge(solved_by: "polycube-census v#{VERSION}")
       )
     end

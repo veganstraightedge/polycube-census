@@ -23,5 +23,18 @@ RSpec.describe Census::Verifier do
     it "rejects unknown certificate types" do
       expect(described_class.new(certificate: { type: "wishful" }, shape: screw)).not_to be_valid
     end
+
+    it "accepts a torus certificate straight from the search" do
+      l_tricube = Census::Polycube.new(cells: [[0, 0, 0], [0, 0, 1], [0, 1, 0]])
+      torus = Census::TorusSearch.new(shape: l_tricube).certificate
+      expect(described_class.new(certificate: torus, shape: l_tricube)).to be_valid
+    end
+
+    it "rejects a torus certificate with duplicated placements" do
+      l_tricube = Census::Polycube.new(cells: [[0, 0, 0], [0, 0, 1], [0, 1, 0]])
+      torus = Census::TorusSearch.new(shape: l_tricube).certificate
+      tampered = torus.merge(placements: torus[:placements] * 2)
+      expect(described_class.new(certificate: tampered, shape: l_tricube)).not_to be_valid
+    end
   end
 end
