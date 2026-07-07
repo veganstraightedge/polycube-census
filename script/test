@@ -4,4 +4,3 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 bundle exec rspec --format progress
-bundle exec rubocop

@@ -15,3 +15,4 @@
 - `Verifier`: geometry-only recheck of box certificates (no solver trust).
 - `Pipeline` + `script/census`: stamps verified verdicts into `data/`.
 - First verdicts: all 12 shapes through n=4 are `tiler`, each with a verified box certificate (screws pair into 2x2x2; skew tetracube needs a 2x3x4).
+- Removed RuboCop from the toolchain; style passes happen manually at the end, checked against the suite and generated output.
