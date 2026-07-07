@@ -245,6 +245,12 @@ script/gallery    # emit STLs and renders
   drat-trim is itself unverified C. Post-M8 stretch: formalize the encoding's
   soundness ("CNF UNSAT ⇒ no tiling of ℤ³") in Lean, making the smallest-non-tiler
   result a fully machine-checked theorem; potential Lean-community collaboration.
+- **Box-order addendum.** For shapes holding only torus certificates, rerun the box
+  stage at rising budgets (an "upgrade pass" — the pipeline must revisit
+  already-stamped shapes seeking stronger certificates). First box found in
+  ascending volume = the shape's exact box order (Klarner's "order", unexplored in
+  3D; Dahlke's heptominoes hit orders 76 and 92 in 2D). Survivors get certified
+  lower bounds ("no box through k copies"); diffable data releases per budget raise.
 - **Manim visualizations + YouTube.** After M6, use the census as source material for
   Manim animations (tilings assembling, coronas growing and getting stuck) and a video
   or few. Certificates are the animation data — placements are keyframes — so this
