@@ -11,22 +11,46 @@ module Census
       SATISFIABLE = 10
       UNSATISFIABLE = 20
 
-      def self.solve(instance, proof_path: nil)
+      def self.solve(instance, proof_path: nil, progress: nil)
         Tempfile.create(["census", ".cnf"]) do |file|
           file.write(instance.to_dimacs)
           file.flush
-          run(file.path, proof_path:)
+          run(file.path, proof_path:, progress:)
         end
       end
 
-      def self.run(path, proof_path: nil)
-        command = ["kissat", "--quiet", path]
+      # With a progress IO, kissat runs un-quieted and its periodic statistics
+      # lines stream there live; the verdict lines are parsed as usual.
+      def self.run(path, proof_path: nil, progress: nil)
+        command = progress ? ["kissat", path] : ["kissat", "--quiet", path]
         command << proof_path if proof_path
+        return streamed(command, progress) if progress
+
         output, status = Open3.capture2(*command)
-        case status.exitstatus
+        verdict(status.exitstatus, output)
+      end
+
+      def self.streamed(command, progress)
+        verdict_lines = []
+        status = nil
+        Open3.popen2(*command) do |_stdin, stdout, waiter|
+          stdout.each_line do |line|
+            if line.start_with?("c")
+              progress.puts(line)
+            else
+              verdict_lines << line
+            end
+          end
+          status = waiter.value
+        end
+        verdict(status.exitstatus, verdict_lines.join)
+      end
+
+      def self.verdict(exitstatus, output)
+        case exitstatus
         when SATISFIABLE then true_variables(output)
         when UNSATISFIABLE then nil
-        else raise "kissat failed with exit status #{status.exitstatus}"
+        else raise "kissat failed with exit status #{exitstatus}"
         end
       end
 

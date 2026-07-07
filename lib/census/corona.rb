@@ -15,9 +15,10 @@ module Census
       @shape = shape
     end
 
-    def solve(proof_path: nil)
+    def solve(proof_path: nil, progress: nil)
       build
-      model = SAT::Kissat.solve(@instance, proof_path:)
+      progress&.puts("instance built: #{@instance.variable_count} variables, #{@instance.clauses.size} clauses")
+      model = SAT::Kissat.solve(@instance, proof_path:, progress:)
       model && witness(model)
     end
 
