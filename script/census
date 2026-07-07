@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Run pipeline stages over unresolved shapes in data/. Usage: script/census [max_n]
+
+require_relative "../lib/census"
+
+max_size = Integer(ARGV.fetch(0, "4"))
+root = File.expand_path("../data", __dir__)
+
+Census::Pipeline.new(root:).run(max_size:) { puts it }
+puts "Done through n=#{max_size}"

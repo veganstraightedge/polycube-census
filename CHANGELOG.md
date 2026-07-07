@@ -10,3 +10,8 @@
 - `script/enumerate`: full run through n=8 — 8,152 shapes written, all counts matching OEIS (M1 complete).
 - Public README.
 - GitHub Actions CI (`script/cibuild`: specs + linter).
+- `SAT::Instance` + `SAT::Kissat`: CNF construction and solver round-trip.
+- `BoxTiling` + `BoxSearch`: exact-cover box stage, smallest box by ascending volume.
+- `Verifier`: geometry-only recheck of box certificates (no solver trust).
+- `Pipeline` + `script/census`: stamps verified verdicts into `data/`.
+- First verdicts: all 12 shapes through n=4 are `tiler`, each with a verified box certificate (screws pair into 2x2x2; skew tetracube needs a 2x3x4).
