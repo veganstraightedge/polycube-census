@@ -2,7 +2,7 @@
 
 module Census
   # Reference counts the enumerator must reproduce before anything downstream runs.
-  module Oeis
+  module OEIS
     # https://oeis.org/A000162 — free polycubes with n cells, mirror images distinct
     A000162 = [1, 1, 2, 8, 29, 166, 1023, 6922].freeze
 

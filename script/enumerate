@@ -13,13 +13,15 @@ mismatches = []
 (1..max_size).each do |size|
   shape_count = enumeration.shapes_of(size).size
   class_count = enumeration.mirror_classes_of(size).size
-  expected_shapes = Census::Oeis::A000162.fetch(size - 1)
-  expected_classes = Census::Oeis::A038119.fetch(size - 1)
+  expected_shapes = Census::OEIS::A000162.fetch(size - 1)
+  expected_classes = Census::OEIS::A038119.fetch(size - 1)
   agreed = shape_count == expected_shapes && class_count == expected_classes
   mismatches << size unless agreed
   puts format(
-    "n=%d  shapes %d (oeis %d)  mirror-classes %d (oeis %d)  %s",
-    size, shape_count, expected_shapes, class_count, expected_classes, agreed ? "ok" : "MISMATCH"
+    "n=%<size>d  shapes %<shape_count>d (oeis %<expected_shapes>d)  " \
+    "mirror-classes %<class_count>d (oeis %<expected_classes>d)  %<status>s",
+    size:, shape_count:, expected_shapes:, class_count:, expected_classes:,
+    status: agreed ? "ok" : "MISMATCH"
   )
 end
 

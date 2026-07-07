@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Census::Oeis do
+RSpec.describe Census::OEIS do
   it "records A000162 through n=8" do
     expect(described_class::A000162.size).to eq(8)
   end
