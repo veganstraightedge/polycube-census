@@ -16,9 +16,6 @@ json = if ARGV[0]
        end
 unfoldings = JSON.parse(json, symbolize_names: true).fetch(:unfoldings)
 
-snapshot = File.expand_path("../data/whuts-unfoldings.json", __dir__)
-File.write(snapshot, json)
-
 root = File.expand_path("../data/8", __dir__)
 path_by_cells = {}
 Dir.glob("#{root}/*/shape.json").each do |path|
@@ -33,6 +30,7 @@ unfoldings.each do |unfolding|
   shape = Census::Polycube.new(cells: unfolding[:coords])
   path = path_by_cells.fetch(shape.canonical_cells)
   record = JSON.parse(File.read(path), symbolize_names: true)
+  unfolding[:census_id] = record[:id]
   record[:credits] = record[:credits].merge(
     prior_art: {
       source: "https://whuts.org/unfolding/#{unfolding[:id]}",
@@ -44,6 +42,9 @@ unfoldings.each do |unfolding|
   matched << path
 end
 
+snapshot = File.expand_path("../data/whuts-unfoldings.json", __dir__)
+File.write(snapshot, "#{JSON.pretty_generate(unfoldings: unfoldings)}\n")
+
 puts "credited #{matched.size} of #{unfoldings.size} unfoldings across #{matched.uniq.size} distinct shapes"
 puts "non-SOLVED states: #{unsolved.inspect}" if unsolved.any?
-puts "snapshot saved: #{snapshot}"
+puts "snapshot saved with census_id mapping: #{snapshot}"
