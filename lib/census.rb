@@ -2,6 +2,7 @@
 
 require_relative "census/box_search"
 require_relative "census/box_tiling"
+require_relative "census/corona"
 require_relative "census/data_writer"
 require_relative "census/enumeration"
 require_relative "census/json_document"

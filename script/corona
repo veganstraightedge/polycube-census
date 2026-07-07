@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Depth-k corona test for one shape. Usage: script/corona 8/1309 2
+#
+# SAT: Heesch >= k; verified witness saved to <shape dir>/corona<k>.json.
+# UNSAT (with depth k-1 known SAT): Heesch = k-1 exactly, so the shape can
+# never tile — stamps NON_TILER and keeps the DRAT proof.
+
+require "fileutils"
+require_relative "../lib/census"
+
+id = ARGV.fetch(0)
+depth = Integer(ARGV.fetch(1))
+directory = File.expand_path("../data/#{id}", __dir__)
+path = "#{directory}/shape.json"
+record = JSON.parse(File.read(path), symbolize_names: true)
+shape = Census::Polycube.new(cells: record[:cells])
+corona = Census::Corona.new(depth:, shape:)
+
+sizes = corona.universes.map { |level, placements| "level #{level}: #{placements.size}" }.join(", ")
+puts "#{id} depth #{depth} — candidate placements #{sizes}"
+
+FileUtils.mkdir_p("#{directory}/cnf")
+proof_path = "#{directory}/cnf/corona#{depth}.drat"
+started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+witness = corona.solve(proof_path:)
+elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).round(1)
+
+if witness
+  raise "witness failed independent verification" unless corona.verified?(witness)
+
+  File.delete(proof_path) if File.exist?(proof_path)
+  compact = witness.transform_values { |placements| placements.map { it.slice(:rotation, :offset) } }
+  File.write("#{directory}/corona#{depth}.json", "#{JSON.generate(compact)}\n")
+  copies = witness.values.sum(&:size)
+  puts "SAT in #{elapsed}s: #{depth} complete coronas exist (#{copies} copies). Heesch >= #{depth}."
+  puts "Witness (verified): #{directory}/corona#{depth}.json"
+else
+  record.merge!(
+    verdict: "non_tiler",
+    tiles_rotations_only: false,
+    tiles_with_reflections: false,
+    certificate: { type: "heesch", heesch: depth - 1, refutation: "cnf/corona#{depth}.drat" },
+    heesch: depth - 1,
+    budgets: record[:budgets].merge(corona_depth: depth),
+    credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION}")
+  )
+  File.write(path, Census::JSONDocument.generate(record))
+  puts "UNSAT in #{elapsed}s: no depth-#{depth} corona exists. Heesch number = #{depth - 1}."
+  puts "NON_TILER stamped. DRAT proof: #{proof_path}"
+  puts "If everything else through n=8 tiles, this is the smallest non-tiling polycube."
+end
