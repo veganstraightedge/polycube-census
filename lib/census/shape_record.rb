@@ -20,10 +20,7 @@ module Census
 
     def to_h = geometry_fields.merge(verdict_fields)
 
-    def to_json_document
-      fields = to_h.map { |key, value| %(  "#{key}": #{JSON.generate(value)}) }
-      "{\n#{fields.join(",\n")}\n}\n"
-    end
+    def to_json_document = JSONDocument.generate(to_h)
 
     private
 
