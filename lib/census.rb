@@ -14,6 +14,8 @@ require_relative "census/sat/exact_cover"
 require_relative "census/sat/instance"
 require_relative "census/sat/kissat"
 require_relative "census/shape_record"
+require_relative "census/torus_search"
+require_relative "census/torus_tiling"
 require_relative "census/verifier"
 require_relative "census/version"
 
