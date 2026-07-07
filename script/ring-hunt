@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Deep periodic hunt for one open shape. Usage: script/ring-hunt 8/1309 128
+#
+# Tries every sublattice at rising index (multiples of the shape size),
+# starting just above the record's certified torus budget. After each fully
+# refuted index the record's budget is raised — every completed index is new
+# certified information. If a tiling appears: verify, stamp TILER, stop.
+# Safe to Ctrl-C anytime and rerun; it resumes from the recorded budget.
+
+require_relative "../lib/census"
+
+id = ARGV.fetch(0)
+max_index = Integer(ARGV.fetch(1))
+path = File.expand_path("../data/#{id}/shape.json", __dir__)
+record = JSON.parse(File.read(path), symbolize_names: true)
+shape = Census::Polycube.new(cells: record[:cells])
+
+certified = record[:budgets][:torus_max_index] || 0
+index = (certified / shape.size + 1) * shape.size
+
+while index <= max_index
+  lattices = Census::Lattice.all_of_index(index)
+  puts "#{Time.now.strftime('%H:%M:%S')}  index #{index}: trying #{lattices.size} lattices"
+
+  lattices.each do |lattice|
+    placements = Census::TorusTiling.new(lattice:, shape:).solve
+    next unless placements
+
+    certificate = { type: "torus", lattice: lattice.basis, placements: }
+    raise "tiling failed verification" unless Census::Verifier.new(certificate:, shape:).valid?
+
+    record.merge!(
+      verdict: "tiler",
+      tiles_rotations_only: true,
+      tiles_with_reflections: true,
+      certificate:,
+      budgets: record[:budgets].merge(torus_max_index: index),
+      credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION}")
+    )
+    File.write(path, Census::JSONDocument.generate(record))
+    puts "TILING FOUND at index #{index} — verified and stamped. Chainmail tiles space."
+    exit 0
+  end
+
+  record[:budgets] = record[:budgets].merge(torus_max_index: index)
+  File.write(path, Census::JSONDocument.generate(record))
+  puts "#{Time.now.strftime('%H:%M:%S')}  index #{index} refuted — certified budget raised"
+  index += shape.size
+end
+
+puts "No tiling through index #{max_index}. The ring holds out."

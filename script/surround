@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# The corona-1 surround test for one shape. Usage: script/surround 8/1309
+#
+# SAT: writes the witness to <shape dir>/corona1.json (Heesch >= 1).
+# UNSAT: keeps the DRAT proof in <shape dir>/cnf/corona1.drat — that is a
+# Heesch-0 non-tiler certificate, i.e. the theorem.
+
+require "fileutils"
+require_relative "../lib/census"
+
+id = ARGV.fetch(0)
+directory = File.expand_path("../data/#{id}", __dir__)
+record = JSON.parse(File.read("#{directory}/shape.json"), symbolize_names: true)
+shape = Census::Polycube.new(cells: record[:cells])
+surround = Census::Surround.new(shape:)
+
+puts "#{id}: #{surround.placements.size} candidate placements, #{surround.frontier.size} frontier cells"
+
+FileUtils.mkdir_p("#{directory}/cnf")
+proof_path = "#{directory}/cnf/corona1.drat"
+started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+witness = surround.solve(proof_path:)
+elapsed = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).round(1)
+
+if witness
+  raise "witness failed independent verification" unless surround.verified?(witness)
+
+  File.delete(proof_path) if File.exist?(proof_path)
+  placements = witness.map { it.slice(:rotation, :offset) }
+  File.write("#{directory}/corona1.json", "#{JSON.generate(placements)}\n")
+  puts "SAT in #{elapsed}s: the seed can be fully surrounded by #{witness.size} copies."
+  puts "Witness (verified): #{directory}/corona1.json"
+else
+  puts "UNSAT in #{elapsed}s: Heesch number 0 — certified non-tiler."
+  puts "DRAT proof kept at: #{proof_path}"
+end
