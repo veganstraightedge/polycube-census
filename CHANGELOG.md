@@ -21,3 +21,5 @@
 - `script/verify`: independent geometry-only recheck of every stored certificate.
 - M3: all 207 shapes through n=6 certified as tilers (n=5: 16 box / 13 torus; n=6: 68 box / 98 torus), every certificate independently verified.
 - M4 headline: all 1,023 heptacubes tile space (36 box / 987 torus) — the smallest non-tiling polycube has at least 8 cells, unlike 2D where heptominoes already fail. 1,230 certificates verified.
+- `script/census --shard i/k`: parallel workers over disjoint shapes.
+- n=8 sweep (6-way parallel, Shane's terminal): 6,921 of 6,922 octacubes tile (383 box / 6,538 torus). Exactly one survivor: 8/1309, the flat 3x3 square ring — the holey octomino, a classic 2D non-tiler whose hole in 3D is an open channel rings can thread. No box through 12 copies, no periodic block through 48 cells. 8,151 certificates verified.
