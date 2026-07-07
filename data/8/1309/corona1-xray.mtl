@@ -1,0 +1,6 @@
+newmtl seed
+Kd 0.906 0.298 0.235
+newmtl threader
+Kd 0.204 0.596 0.859
+newmtl ghost
+Kd 0.584 0.647 0.651
