@@ -82,7 +82,9 @@ are generated from certificates and land beside each record.
 - [x] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILER` certificates
       (16 of 29 pentacubes and 68 of 166 hexacubes tile a box within budget; the rest
       are periodic via skew lattices — many are translations-only lattice tiles).
-- [ ] **M4 — The heptacube sweep.** All 1,023 `n = 7` shapes resolved with smallest non-tiler found or ruled out at this size.
+- [x] **M4 — The heptacube sweep.** All 1,023 heptacubes tile space (36 box, 987 skew-lattice) —
+      so the smallest non-tiling polycube, if any exists through `n = 8`, has exactly 8 cells.
+      A first divergence from 2D, where non-tilers already appear among the heptominoes.
 - [ ] **M5 — N8.** Records hunt, including cross-checking the 261 tesseract unfoldings settled by [WHUTS](https://whuts.org).
 - [ ] **M6 — Publish.** Browsable gallery.
 - [ ] **M7 — Publish.** OEIS sequences.

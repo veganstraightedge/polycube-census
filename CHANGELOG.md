@@ -20,3 +20,4 @@
 - `TorusTiling` + `TorusSearch`: periodic tilings on skew lattices; wired into `Verifier` and `Pipeline` as the box stage's fallback.
 - `script/verify`: independent geometry-only recheck of every stored certificate.
 - M3: all 207 shapes through n=6 certified as tilers (n=5: 16 box / 13 torus; n=6: 68 box / 98 torus), every certificate independently verified.
+- M4 headline: all 1,023 heptacubes tile space (36 box / 987 torus) — the smallest non-tiling polycube has at least 8 cells, unlike 2D where heptominoes already fail. 1,230 certificates verified.
