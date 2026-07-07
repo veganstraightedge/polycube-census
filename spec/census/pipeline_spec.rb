@@ -42,6 +42,27 @@ RSpec.describe Census::Pipeline do
       end
     end
 
+    it "shards by shape index so parallel workers touch disjoint files" do
+      Dir.mktmpdir do |root|
+        Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 3))
+        described_class.new(root:).run(max_size: 3, shard_count: 2, shard_index: 1)
+        bent = JSON.parse(File.read(File.join(root, "3/2/shape.json")), symbolize_names: true)
+        straight = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
+        expect([straight[:verdict], bent[:verdict]]).to eq(["tiler", nil])
+      end
+    end
+
+    it "covers everything once all shards have run" do
+      Dir.mktmpdir do |root|
+        Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 3))
+        described_class.new(root:).run(max_size: 3, shard_count: 2, shard_index: 1)
+        described_class.new(root:).run(max_size: 3, shard_count: 2, shard_index: 2)
+        verdicts = Dir.glob("*/*/shape.json", base: root)
+                      .map { JSON.parse(File.read(File.join(root, it)))["verdict"] }
+        expect(verdicts).to all(eq("tiler"))
+      end
+    end
+
     it "skips shapes that already carry a verdict" do
       Dir.mktmpdir do |root|
         Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 1))

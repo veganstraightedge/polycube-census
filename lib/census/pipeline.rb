@@ -10,9 +10,9 @@ module Census
       @max_volume = max_volume
     end
 
-    def run(max_size:, &report)
+    def run(max_size:, shard_count: 1, shard_index: 1, &report)
       (1..max_size).each do |size|
-        record_paths(size).each { process(it, &report) }
+        record_paths(size, shard_count:, shard_index:).each { process(it, &report) }
       end
     end
 
@@ -20,9 +20,10 @@ module Census
 
     attr_reader :max_index, :max_volume, :root
 
-    def record_paths(size)
+    def record_paths(size, shard_count:, shard_index:)
       Dir.glob(root.join(size.to_s, "*", "shape.json").to_s)
          .sort_by { Integer(File.basename(File.dirname(it))) }
+         .select { Integer(File.basename(File.dirname(it))) % shard_count == shard_index % shard_count }
     end
 
     def process(path, &report)

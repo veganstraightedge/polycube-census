@@ -1,12 +1,27 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Run pipeline stages over unresolved shapes in data/. Usage: script/census [max_n]
+# Run pipeline stages over unresolved shapes in data/.
+#
+# Usage:
+#   script/census [max_n]                 # everything, one process
+#   script/census [max_n] --shard 2/6     # this worker takes every 6th shape,
+#                                         # starting at 2 — run one worker per
+#                                         # shard (1/6 .. 6/6) in parallel
+#
+# Shards touch disjoint files, so parallel workers never race.
 
 require_relative "../lib/census"
 
-max_size = Integer(ARGV.fetch(0, "4"))
+arguments = ARGV.dup
+shard_index, shard_count = if (position = arguments.index("--shard"))
+                             arguments.delete_at(position)
+                             arguments.delete_at(position).split("/").map { Integer(it) }
+                           else
+                             [1, 1]
+                           end
+max_size = Integer(arguments.fetch(0, "8"))
 root = File.expand_path("../data", __dir__)
 
-Census::Pipeline.new(root:).run(max_size:) { puts it }
-puts "Done through n=#{max_size}"
+Census::Pipeline.new(root:).run(max_size:, shard_count:, shard_index:) { puts it }
+puts "Done through n=#{max_size} (shard #{shard_index}/#{shard_count})"
