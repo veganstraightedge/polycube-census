@@ -16,3 +16,7 @@
 - `Pipeline` + `script/census`: stamps verified verdicts into `data/`.
 - First verdicts: all 12 shapes through n=4 are `tiler`, each with a verified box certificate (screws pair into 2x2x2; skew tetracube needs a 2x3x4).
 - Removed RuboCop from the toolchain; style passes happen manually at the end, checked against the suite and generated output.
+- `Lattice`: HNF sublattices of Z^3 (enumeration validated against known sublattice counts) with quotient reduction.
+- `TorusTiling` + `TorusSearch`: periodic tilings on skew lattices; wired into `Verifier` and `Pipeline` as the box stage's fallback.
+- `script/verify`: independent geometry-only recheck of every stored certificate.
+- M3: all 207 shapes through n=6 certified as tilers (n=5: 16 box / 13 torus; n=6: 68 box / 98 torus), every certificate independently verified.

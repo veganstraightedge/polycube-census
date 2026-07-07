@@ -78,8 +78,10 @@ are generated from certificates and land beside each record.
 ## Status
 
 - [x] **M1 — Enumeration.** All 8,152 shapes through `n = 8` with counts matching OEIS [A000162](https://oeis.org/A000162) and [A038119](https://oeis.org/A038119) exactly.
-- [ ] **M2 — SAT plumbing.** Box and torus stages with everything through `n = 4` certified.
-- [ ] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILER` certificates.
+- [x] **M2 — SAT plumbing.** Box and torus stages with everything through `n = 4` certified.
+- [x] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILER` certificates
+      (16 of 29 pentacubes and 68 of 166 hexacubes tile a box within budget; the rest
+      are periodic via skew lattices — many are translations-only lattice tiles).
 - [ ] **M4 — The heptacube sweep.** All 1,023 `n = 7` shapes resolved with smallest non-tiler found or ruled out at this size.
 - [ ] **M5 — N8.** Records hunt, including cross-checking the 261 tesseract unfoldings settled by [WHUTS](https://whuts.org).
 - [ ] **M6 — Publish.** Browsable gallery.

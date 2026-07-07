@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Independently recheck every stored certificate with plain geometry — no SAT,
+# no solver trust. Exits nonzero if any certificate fails. Usage: script/verify
+
+require_relative "../lib/census"
+
+root = File.expand_path("../data", __dir__)
+checked = 0
+unresolved = 0
+failures = []
+
+Dir.glob(File.join(root, "*", "*", "shape.json")).sort.each do |path|
+  record = JSON.parse(File.read(path), symbolize_names: true)
+  if record[:certificate].nil?
+    unresolved += 1
+    next
+  end
+
+  shape = Census::Polycube.new(cells: record[:cells])
+  verifier = Census::Verifier.new(certificate: record[:certificate], shape:)
+  failures << record[:id] unless verifier.valid?
+  checked += 1
+end
+
+puts "verified #{checked} certificates, #{unresolved} unresolved shapes"
+abort "FAILED: #{failures.join(', ')}" if failures.any?
