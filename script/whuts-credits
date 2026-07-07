@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Import WHUTS credits: match the 261 tesseract unfoldings (all octacubes) to
+# their census ids and record each one's solver and verifiers as prior art.
+#
+# Usage: script/whuts-credits [unfoldings.json]   (fetches the live API if no file given)
+
+require "net/http"
+require_relative "../lib/census"
+
+json = if ARGV[0]
+         File.read(ARGV[0])
+       else
+         Net::HTTP.get(URI("https://api.whuts.org/unfoldings"))
+       end
+unfoldings = JSON.parse(json, symbolize_names: true).fetch(:unfoldings)
+
+snapshot = File.expand_path("../data/whuts-unfoldings.json", __dir__)
+File.write(snapshot, json)
+
+root = File.expand_path("../data/8", __dir__)
+path_by_cells = {}
+Dir.glob("#{root}/*/shape.json").each do |path|
+  record = JSON.parse(File.read(path), symbolize_names: true)
+  path_by_cells[record[:cells]] = path
+end
+
+matched = []
+unsolved = []
+unfoldings.each do |unfolding|
+  unsolved << unfolding[:id] unless unfolding[:state] == "SOLVED"
+  shape = Census::Polycube.new(cells: unfolding[:coords])
+  path = path_by_cells.fetch(shape.canonical_cells)
+  record = JSON.parse(File.read(path), symbolize_names: true)
+  record[:credits] = record[:credits].merge(
+    prior_art: {
+      source: "https://whuts.org/unfolding/#{unfolding[:id]}",
+      solver: unfolding[:solver],
+      verifiers: unfolding[:verifiers]
+    }
+  )
+  File.write(path, Census::JSONDocument.generate(record))
+  matched << path
+end
+
+puts "credited #{matched.size} of #{unfoldings.size} unfoldings across #{matched.uniq.size} distinct shapes"
+puts "non-SOLVED states: #{unsolved.inspect}" if unsolved.any?
+puts "snapshot saved: #{snapshot}"
