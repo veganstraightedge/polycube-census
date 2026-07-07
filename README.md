@@ -85,7 +85,14 @@ are generated from certificates and land beside each record.
 - [x] **M4 — The heptacube sweep.** All 1,023 heptacubes tile space (36 box, 987 skew-lattice) —
       so the smallest non-tiling polycube, if any exists through `n = 8`, has exactly 8 cells.
       A first divergence from 2D, where non-tilers already appear among the heptominoes.
-- [ ] **M5 — N8.** Records hunt, including cross-checking the 261 tesseract unfoldings settled by [WHUTS](https://whuts.org).
+- [ ] **M5 — N8.** Sweep done: 6,921 of 6,922 octacubes tile (383 box, 6,538 skew-lattice),
+      all certificates independently verified. The lone survivor is
+      [`8/1309`](data/8/1309/shape.json) — the flat 3×3 square ring (the holey octomino),
+      `OPEN`: provably no box through 16 copies, no periodic block through 64 cells.
+      In 3D its hole is an open channel that perpendicular rings can thread, so the
+      question it poses is: can chainmail fill space?
+      Still to do: corona/Heesch stage for `8/1309`, WHUTS cross-check of the 261
+      tesseract unfoldings.
 - [ ] **M6 — Publish.** Browsable gallery.
 - [ ] **M7 — Publish.** OEIS sequences.
 - [ ] **M8 — Publish.** Paper.

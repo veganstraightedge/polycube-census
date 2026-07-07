@@ -5,11 +5,11 @@
   "symmetry_order": 8,
   "chiral": false,
   "mirror_id": "8/1309",
-  "verdict": null,
+  "verdict": "open",
   "tiles_rotations_only": null,
   "tiles_with_reflections": null,
   "certificate": null,
   "heesch": null,
-  "budgets": {},
+  "budgets": {"box_max_volume":128,"torus_max_index":64},
   "credits": {"solved_by":null,"verified_by":null,"prior_art":null}
 }
