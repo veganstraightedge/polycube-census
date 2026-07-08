@@ -13,7 +13,15 @@ module Census
 
       # instance_path keeps the generated CNF on disk — a DRAT proof is only
       # checkable against the exact formula it refutes.
+      #
+      # CENSUS_FFI=1 routes plain solves through the in-process IPASIR engine
+      # (no spawn tax). Proof-capture and progress-streaming runs always use
+      # the subprocess path — proofs and live statistics need it.
       def self.solve(instance, instance_path: nil, proof_path: nil, progress: nil)
+        if ENV["CENSUS_FFI"] == "1" && proof_path.nil? && progress.nil?
+          require_relative "ipasir"
+          return IPASIR.solve(instance)
+        end
         if instance_path
           File.write(instance_path, instance.to_dimacs)
           return run(instance_path, proof_path:, progress:)
