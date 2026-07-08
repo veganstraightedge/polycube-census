@@ -31,10 +31,15 @@ module Census
       shapes.each_with_index.to_h { |shape, position| [shape.cells, position + 1] }
     end
 
+    # Existing records are sacred — they may carry verdicts, certificates, and
+    # credits. Only shapes new to the census get files written.
     def write_record(record, size:, index:)
       directory = root.join(size.to_s, index.to_s)
       directory.mkpath
-      directory.join("shape.json").write(record.to_json_document)
+      path = directory.join("shape.json")
+      return if path.exist?
+
+      path.write(record.to_json_document)
     end
   end
 end
