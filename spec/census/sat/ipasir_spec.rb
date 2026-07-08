@@ -29,6 +29,16 @@ RSpec.describe "Census::SAT::IPASIR", skip: (File.exist?(library) ? false : "run
     expect(Census::SAT::IPASIR.solve(pigeonhole(5))).to be_nil
   end
 
+  it "routes Kissat.solve through the ffi engine when CENSUS_FFI=1" do
+    instance = Census::SAT::Instance.new
+    only = instance.new_variable
+    instance.add_clause([only])
+    ENV["CENSUS_FFI"] = "1"
+    expect(Census::SAT::Kissat.solve(instance)).to eq(Set[only])
+  ensure
+    ENV.delete("CENSUS_FFI")
+  end
+
   it "solves repeatedly without leaking state between calls" do
     instance = Census::SAT::Instance.new
     only = instance.new_variable
