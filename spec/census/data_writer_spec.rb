@@ -19,6 +19,26 @@ RSpec.describe Census::DataWriter do
       end
     end
 
+    it "announces each size as it writes" do
+      Dir.mktmpdir do |root|
+        messages = []
+        writer = described_class.new(root:, progress: ->(line) { messages << line })
+        writer.write(Census::Enumeration.new(max_size: 2))
+        expect(messages).to include("writing n=2: 1 records")
+      end
+    end
+
+    it "never overwrites an existing record" do
+      Dir.mktmpdir do |root|
+        described_class.new(root:).write(Census::Enumeration.new(max_size: 1))
+        path = File.join(root, "1/1/shape.json")
+        stamped = File.read(path).sub('"verdict": null', '"verdict": "tiler"')
+        File.write(path, stamped)
+        described_class.new(root:).write(Census::Enumeration.new(max_size: 1))
+        expect(File.read(path)).to eq(stamped)
+      end
+    end
+
     it "finds exactly one chiral pair among the tetracubes" do
       expect(chiral_tetracube_records.size).to eq(2)
     end
