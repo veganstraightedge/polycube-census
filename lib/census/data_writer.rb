@@ -5,8 +5,9 @@ module Census
   class DataWriter
     attr_reader :root
 
-    def initialize(root:)
+    def initialize(root:, progress: nil)
       @root = Pathname(root)
+      @progress = progress
     end
 
     def write(enumeration)
@@ -16,6 +17,7 @@ module Census
     private
 
     def write_size(shapes, size:)
+      @progress&.call("writing n=#{size}: #{shapes.size} records")
       indices = index_by_cells(shapes)
       shapes.each_with_index do |shape, position|
         record = ShapeRecord.new(

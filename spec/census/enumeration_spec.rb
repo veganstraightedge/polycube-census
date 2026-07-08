@@ -24,6 +24,14 @@ RSpec.describe Census::Enumeration do
     end
   end
 
+  describe "progress reporting" do
+    it "announces each completed generation" do
+      messages = []
+      described_class.new(max_size: 3, progress: ->(line) { messages << line }).shapes_by_size
+      expect(messages).to include("n=3: 2 shapes enumerated")
+    end
+  end
+
   describe "#mirror_classes_of" do
     it "reproduces OEIS A038119 through n=6" do
       counts = (1..6).map { enumeration.mirror_classes_of(it).size }

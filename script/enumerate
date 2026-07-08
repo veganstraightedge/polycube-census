@@ -6,8 +6,10 @@
 
 require_relative "../lib/census"
 
+$stdout.sync = true
 max_size = Integer(ARGV.fetch(0, "8"))
-enumeration = Census::Enumeration.new(max_size:)
+report = ->(line) { puts line }
+enumeration = Census::Enumeration.new(max_size:, progress: report)
 
 mismatches = []
 (1..max_size).each do |size|
@@ -27,5 +29,5 @@ end
 
 abort "Enumeration disagrees with OEIS: n=#{mismatches.join(', ')}" if mismatches.any?
 
-Census::DataWriter.new(root: File.expand_path("../data", __dir__)).write(enumeration)
+Census::DataWriter.new(root: File.expand_path("../data", __dir__), progress: report).write(enumeration)
 puts "Wrote data/ through n=#{max_size}"

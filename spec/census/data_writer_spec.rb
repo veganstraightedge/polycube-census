@@ -19,6 +19,15 @@ RSpec.describe Census::DataWriter do
       end
     end
 
+    it "announces each size as it writes" do
+      Dir.mktmpdir do |root|
+        messages = []
+        writer = described_class.new(root:, progress: ->(line) { messages << line })
+        writer.write(Census::Enumeration.new(max_size: 2))
+        expect(messages).to include("writing n=2: 1 records")
+      end
+    end
+
     it "never overwrites an existing record" do
       Dir.mktmpdir do |root|
         described_class.new(root:).write(Census::Enumeration.new(max_size: 1))
