@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Spike benchmark: subprocess kissat (DIMACS + fork/exec + parse) versus
+# in-process IPASIR (CaDiCaL via ffi) on identical instances.
+# Usage: script/ffi-benchmark
+
+require_relative "../lib/census"
+require_relative "../lib/census/sat/ipasir"
+
+def pigeonhole(pigeons)
+  holes = pigeons - 1
+  instance = Census::SAT::Instance.new
+  nests = Array.new(pigeons) { Array.new(holes) { instance.new_variable } }
+  nests.each { instance.add_clause(it) }
+  (0...holes).each do |hole|
+    (0...pigeons).to_a.combination(2) { |a, b| instance.add_clause([-nests[a][hole], -nests[b][hole]]) }
+  end
+  instance
+end
+
+def bench(label, count)
+  started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+  count.times { yield }
+  elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - started
+  puts format("%-32s %7.2fs total  %7.2fms per solve", label, elapsed, elapsed * 1000.0 / count)
+end
+
+tiny = pigeonhole(4)
+small = pigeonhole(6)
+harder = pigeonhole(9)
+
+bench("subprocess kissat, tiny x500", 500) { Census::SAT::Kissat.solve(tiny) }
+bench("ffi cadical,       tiny x500", 500) { Census::SAT::IPASIR.solve(tiny) }
+bench("subprocess kissat, small x200", 200) { Census::SAT::Kissat.solve(small) }
+bench("ffi cadical,       small x200", 200) { Census::SAT::IPASIR.solve(small) }
+bench("subprocess kissat, PHP9 x5", 5) { Census::SAT::Kissat.solve(harder) }
+bench("ffi cadical,       PHP9 x5", 5) { Census::SAT::IPASIR.solve(harder) }

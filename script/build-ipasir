@@ -1,0 +1,10 @@
+#!/bin/bash
+# Link a dynamic IPASIR library from Homebrew's static libcadical, for the
+# ffi binding. No downloads — uses the already-installed brew artifacts.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+mkdir -p vendor
+cc -dynamiclib -Wl,-all_load "$(brew --prefix cadical)/lib/libcadical.a" -lc++ \
+  -o vendor/libipasir-cadical.dylib
+echo "built vendor/libipasir-cadical.dylib"
