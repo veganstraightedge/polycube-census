@@ -2,27 +2,47 @@
 # frozen_string_literal: true
 
 # Independently recheck every stored certificate with plain geometry — no SAT,
-# no solver trust. Exits nonzero if any certificate fails. Usage: script/verify
+# no solver trust. Heesch (non-tiler) certificates are refutation-backed: their
+# positive half (the saved corona witness) is rechecked here; their negative
+# half is drat-trim's jurisdiction (the DRAT proof under cnf/).
+# Exits nonzero if anything fails. Usage: script/verify
 
 require_relative "../lib/census"
 
 root = File.expand_path("../data", __dir__)
 checked = 0
 unresolved = 0
+refutation_backed = []
 failures = []
 
 Dir.glob(File.join(root, "*", "*", "shape.json")).sort.each do |path|
   record = JSON.parse(File.read(path), symbolize_names: true)
-  if record[:certificate].nil?
+  certificate = record[:certificate]
+  if certificate.nil?
     unresolved += 1
     next
   end
 
   shape = Census::Polycube.new(cells: record[:cells])
-  verifier = Census::Verifier.new(certificate: record[:certificate], shape:)
-  failures << record[:id] unless verifier.valid?
+
+  if certificate[:type] == "heesch"
+    refutation_backed << record[:id]
+    witness_path = File.join(File.dirname(path), "corona1.json")
+    if File.exist?(witness_path)
+      placements = JSON.parse(File.read(witness_path), symbolize_names: true)
+      reconstructed = placements.map { it.merge(cells: Census::Assembly.placed_cells(it, shape)) }
+      failures << "#{record[:id]} (corona1 witness)" unless Census::Surround.new(shape:).verified?(reconstructed)
+      checked += 1
+    end
+    next
+  end
+
+  failures << record[:id] unless Census::Verifier.new(certificate:, shape:).valid?
   checked += 1
 end
 
 puts "verified #{checked} certificates, #{unresolved} unresolved shapes"
+if refutation_backed.any?
+  puts "refutation-backed non-tilers (recheck with drat-trim against cnf/): #{refutation_backed.join(', ')}"
+end
 abort "FAILED: #{failures.join(', ')}" if failures.any?
