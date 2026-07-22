@@ -27,6 +27,8 @@ module Census
     end
 
     def process(path, &report)
+      puts path
+      puts
       record = JSON.parse(File.read(path), symbolize_names: true)
       return if record[:verdict]
 
