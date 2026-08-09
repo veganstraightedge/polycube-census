@@ -31,3 +31,8 @@
 - n=9 sweep: 48,200 of 48,311 nonacubes tile (782 box / 47,418 torus), every certificate independently verified. 111 survivors (60 mirror classes: 9 achiral + 51 chiral pairs) head to raised-budget probes and corona triage.
 - README and PLAN.md caught up: ring theorem stamped into M5, n=9 campaign added, sample record's budget/credit fields match reality.
 - Markdown docs reflowed: one line per paragraph and list item (soft-wrap in editors, cleaner diffs); LICENSE untouched.
+- `script/census` budget flags (--max/--min volume and index): raised-budget probes that skip already-exhausted work; Pipeline reports each shape as it starts.
+- n=9 triage rounds 1–2: 12 survivors fell at torus index 54–72 (every one a skew torus; the box stage went 0-for-12).
+- Ring family side-quest: the 4×4 ring (2×2 tunnel) and 3×4 ring (1×2 tunnel) tile space (verified torus certificates, indices 48 and 20); the 5×5 ring (3×3 tunnel) has Heesch number 1 — corona-2 UNSAT in 8.8s, DRAT drat-trim VERIFIED. Conjecture on the table: a skinny rectangular ring tiles iff its tunnel has an even dimension.
+- BREAKTHROUGH: 9/2127 (a flat achiral survivor) has a verified corona-2 — Heesch >= 2, the first shape in 3D known to wrap twice. No box through 128, no torus through 72. Corona-3 queued: UNSAT would make it the first Heesch-2 object in three dimensions.
+- `MirroredCertificate` + `script/propagate-mirrors`: P tiles iff mirror(P) tiles — reflect a solved twin's certificate, verify independently, stamp. 5 survivors resolved for free; every future pair costs one solve, not two.

@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Stamp every unresolved chiral shape whose mirror twin already holds a
+# box/torus certificate: reflect the twin's tiling, verify it independently,
+# write the verdict. Serial by design — run between sharded census rounds,
+# never alongside them. Usage: script/propagate-mirrors [max_n]
+
+require_relative "../lib/census"
+
+max_size = Integer(ARGV.fetch(0, "9"))
+root = File.expand_path("../data", __dir__)
+propagated = 0
+
+(1..max_size).each do |size|
+  Dir.glob(File.join(root, size.to_s, "*", "shape.json")).sort.each do |path|
+    record = JSON.parse(File.read(path), symbolize_names: true)
+    next if record[:verdict] || !record[:chiral]
+
+    twin_path = File.join(root, "#{record[:mirror_id]}/shape.json")
+    twin_record = JSON.parse(File.read(twin_path), symbolize_names: true)
+    next unless %w[box torus].include?(twin_record.dig(:certificate, :type))
+
+    shape = Census::Polycube.new(cells: twin_record[:cells])
+    twin = Census::Polycube.new(cells: record[:cells])
+    certificate = Census::MirroredCertificate.new(certificate: twin_record[:certificate], shape:, twin:).certificate
+    raise "mirrored certificate failed verification for #{record[:id]}" unless Census::Verifier.new(certificate:, shape: twin).valid?
+
+    stamped = record.merge(
+      verdict: "tiler",
+      tiles_rotations_only: true,
+      tiles_with_reflections: true,
+      certificate:,
+      budgets: twin_record[:budgets],
+      credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION} (mirrored from #{twin_record[:id]})")
+    )
+    File.write(path, Census::JSONDocument.generate(stamped))
+    puts "#{record[:id]}  tiler  mirrored from #{twin_record[:id]} (verified)"
+    propagated += 1
+  end
+end
+
+puts "propagated #{propagated} certificates"
