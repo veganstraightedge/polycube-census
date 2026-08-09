@@ -1,0 +1,15 @@
+{
+  "id": "9/44698",
+  "n": 9,
+  "cells": [[0,0,1],[0,1,0],[0,1,1],[1,0,2],[1,1,1],[1,1,2],[2,1,1],[2,2,1],[2,3,1]],
+  "symmetry_order": 1,
+  "chiral": true,
+  "mirror_id": "9/45256",
+  "verdict": "tiler",
+  "tiles_rotations_only": true,
+  "tiles_with_reflections": true,
+  "certificate": {"type":"torus","lattice":[[3,0,0],[1,1,0],[0,0,3]],"placements":[{"rotation":23,"offset":[2,0,2]}]},
+  "heesch": null,
+  "budgets": {"box_max_volume":96,"torus_max_index":48},
+  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null}
+}

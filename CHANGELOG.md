@@ -27,3 +27,5 @@
 - Overnight hunt: no periodic tiling through index 152 (19 rings per block), lattice orbit dedup (20x fewer solves).
 - `Surround` (corona-1) + `Corona` (depth-k Heesch test with Sinz AMO encoding, DRAT capture, live solver output).
 - THEOREM: 8/1309, the square ring, has Heesch number 1 and does not tile space — corona-1 SAT (28-copy verified witness), corona-2 UNSAT (reproduced by kissat and CaDiCaL; DRAT proof drat-trim VERIFIED). It is the unique smallest non-tiling polycube. The census through n=8 is complete: zero open shapes.
+- n=9 enumerated: 48,311 nonacubes, counts verified against OEIS.
+- n=9 sweep: 48,200 of 48,311 nonacubes tile (782 box / 47,418 torus), every certificate independently verified. 111 survivors (60 mirror classes: 9 achiral + 51 chiral pairs) head to raised-budget probes and corona triage.
