@@ -126,6 +126,7 @@ Ruby version is pinned in `.ruby-version`.
 
 - [BurrTools](https://burrtools.sourceforge.net) — independent cross-check for box tilings
 - [Kaplan, _Heesch Numbers of Unmarked Polyforms_](https://arxiv.org/abs/2105.09438) and [isohedral/heesch-sat](https://github.com/isohedral/heesch-sat) — the 2D prior art and inspiration for this census
+- [Kaplan, _Detecting Isohedral Polyforms with a SAT Solver_](https://arxiv.org/abs/2406.16407) — the SAT approach to isohedrality, relevant to the smallest-anisohedral-polycube question
 - [OEIS](https://oeis.org) — ground truth for counts, and will be the destination for any new sequences
 - [The Poly Pages](http://www.recmath.com/PolyPages/PolyPages/Tiling.htm) — the hand-found folklore that this census aims to certify
 - [WHUTS](https://whuts.org) — hypercube unfoldings (a slice of our `n = 8`), and an example of attribution/credit to contributors (solvers/verifiers)
