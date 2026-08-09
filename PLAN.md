@@ -42,7 +42,7 @@ Headline unclaimed facts this settles, in order of reachability:
 P tiles iff its mirror tiles (reflect the whole tiling), so compute once per
 mirror-identified class (753 classes through n=7) and report per shape.
 First paper target: n ≤ 8 (complete — the square ring theorem, below).
-Stretch, underway: n = 9.
+Underway: n = 9.
 
 ## Definitions (decision log)
 
@@ -236,7 +236,7 @@ script/gallery    # emit STLs and renders
   import their tilings as certificates with per-shape solver credits, and use the
   overlap as an external cross-check of our pipeline.
   (Done — including the square ring resolution below and the WHUTS import.)
-- **N9 — stretch sweep (added 2026-07, underway).** Enumerate the 48,311
+- **N9 — sweep (added 2026-07, underway).** Enumerate the 48,311
   nonacubes (OEIS-exact), run the full gauntlet, triage the survivors. Sweep
   found 48,200 tilers; 111 survivors (60 mirror classes, none ring-derived)
   in raised-budget triage, surround/corona next.

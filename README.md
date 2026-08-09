@@ -103,7 +103,7 @@ are generated from certificates and land beside each record.
       agree; DRAT proof checked by drat-trim: `s VERIFIED`). The census through
       `n = 8` is complete: zero open shapes. WHUTS cross-check done — all 261
       tesseract unfoldings imported with per-shape solver credits.
-- [ ] **N9 — stretch sweep (underway).** All 48,311 nonacubes enumerated, counts
+- [ ] **N9 — sweep (underway).** All 48,311 nonacubes enumerated, counts
       matching OEIS exactly; 48,200 certified tilers (782 box, 47,418 skew-lattice),
       every certificate independently verified. 111 survivors — 60 mirror classes,
       none containing the ring as a subshape — now in raised-budget triage, with
