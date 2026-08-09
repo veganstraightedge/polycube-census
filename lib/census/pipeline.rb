@@ -30,6 +30,7 @@ module Census
       record = JSON.parse(File.read(path), symbolize_names: true)
       return if record[:verdict]
 
+      report&.call("#{record[:id]}  solving")
       shape = Polycube.new(cells: record[:cells])
       certificate = BoxSearch.new(shape:, max_volume:).certificate ||
                     TorusSearch.new(shape:, max_index:).certificate

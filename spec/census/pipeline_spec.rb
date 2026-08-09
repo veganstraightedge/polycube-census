@@ -63,6 +63,16 @@ RSpec.describe Census::Pipeline do
       end
     end
 
+    it "reports each unresolved shape before solving it, so slow shapes show up in logs" do
+      Dir.mktmpdir do |root|
+        Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 2))
+        lines = []
+        described_class.new(root:).run(max_size: 2) { lines << it }
+        expect(lines.first).to eq("1/1  solving")
+        expect(lines.index("2/1  solving")).to be > lines.index { it.start_with?("1/1  tiler") }
+      end
+    end
+
     it "skips shapes that already carry a verdict" do
       Dir.mktmpdir do |root|
         Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 1))
