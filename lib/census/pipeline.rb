@@ -4,10 +4,16 @@ module Census
   # Runs the certificate stages over every unresolved shape.json under root,
   # verifying and stamping verdicts as it goes. Yields one line per solved shape.
   class Pipeline
-    def initialize(root:, max_index: TorusSearch::DEFAULT_MAX_INDEX, max_volume: BoxSearch::DEFAULT_MAX_VOLUME)
+    def initialize(root:,
+                   max_index: TorusSearch::DEFAULT_MAX_INDEX,
+                   max_volume: BoxSearch::DEFAULT_MAX_VOLUME,
+                   min_index: 0,
+                   min_volume: 0)
       @root = Pathname(root)
       @max_index = max_index
       @max_volume = max_volume
+      @min_index = min_index
+      @min_volume = min_volume
     end
 
     def run(max_size:, shard_count: 1, shard_index: 1, &report)
@@ -18,7 +24,7 @@ module Census
 
     private
 
-    attr_reader :max_index, :max_volume, :root
+    attr_reader :max_index, :max_volume, :min_index, :min_volume, :root
 
     def record_paths(size, shard_count:, shard_index:)
       Dir.glob(root.join(size.to_s, "*", "shape.json").to_s)
@@ -32,8 +38,8 @@ module Census
 
       report&.call("#{record[:id]}  solving")
       shape = Polycube.new(cells: record[:cells])
-      certificate = BoxSearch.new(shape:, max_volume:).certificate ||
-                    TorusSearch.new(shape:, max_index:).certificate
+      certificate = BoxSearch.new(shape:, max_volume:, min_volume:).certificate ||
+                    TorusSearch.new(shape:, max_index:, min_index:).certificate
       return unless certificate
 
       stamp(path, record, shape, certificate)

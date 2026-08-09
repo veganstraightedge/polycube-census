@@ -2,6 +2,12 @@
 
 RSpec.describe Census::BoxSearch do
   describe "#certificate" do
+    it "skips volumes at or below min_volume, so re-probes never redo exhausted work" do
+      straight = Census::Polycube.new(cells: [[0, 0, 0], [0, 0, 1], [0, 0, 2]])
+      certificate = described_class.new(shape: straight, min_volume: 3).certificate
+      expect(certificate[:box].inject(:*)).to be > 3
+    end
+
     it "finds the 1x1x3 box for the straight tricube" do
       straight = Census::Polycube.new(cells: [[0, 0, 0], [0, 0, 1], [0, 0, 2]])
       expect(described_class.new(shape: straight).certificate[:box]).to eq([1, 1, 3])

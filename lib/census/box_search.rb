@@ -3,12 +3,14 @@
 module Census
   # Finds the smallest box a shape tiles, trying volumes in increasing
   # multiples of the shape's size. Returns a box certificate or nil.
+  # min_volume skips volumes already exhausted by an earlier run.
   class BoxSearch
     DEFAULT_MAX_VOLUME = 96
 
-    def initialize(shape:, max_volume: DEFAULT_MAX_VOLUME)
+    def initialize(shape:, max_volume: DEFAULT_MAX_VOLUME, min_volume: 0)
       @shape = shape
       @max_volume = max_volume
+      @min_volume = min_volume
     end
 
     def certificate
@@ -21,13 +23,13 @@ module Census
 
     private
 
-    attr_reader :max_volume, :shape
+    attr_reader :max_volume, :min_volume, :shape
 
     def candidate_boxes
       volumes.flat_map { boxes_of_volume(it) }.select { fits?(it) }
     end
 
-    def volumes = (shape.size..max_volume).step(shape.size).to_a
+    def volumes = (shape.size..max_volume).step(shape.size).reject { it <= min_volume }
 
     def boxes_of_volume(volume)
       boxes = []

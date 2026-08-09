@@ -10,6 +10,8 @@
 #                                         # shard (1/6 .. 6/6) in parallel
 #   script/census [max_n] --max-volume 128 --max-index 72
 #                                         # raised-budget probe of survivors
+#   script/census [max_n] --min-volume 96 --min-index 48 --max-volume 128 --max-index 72
+#                                         # ... skipping budgets a prior run exhausted
 #
 # Shards touch disjoint files, so parallel workers never race.
 
@@ -26,8 +28,10 @@ arguments = ARGV.dup
 shard_index, shard_count = option(arguments, "--shard", "1/1").split("/").map { Integer(it) }
 max_volume = Integer(option(arguments, "--max-volume", Census::BoxSearch::DEFAULT_MAX_VOLUME))
 max_index = Integer(option(arguments, "--max-index", Census::TorusSearch::DEFAULT_MAX_INDEX))
+min_volume = Integer(option(arguments, "--min-volume", 0))
+min_index = Integer(option(arguments, "--min-index", 0))
 max_size = Integer(arguments.fetch(0, "8"))
 root = File.expand_path("../data", __dir__)
 
-Census::Pipeline.new(root:, max_index:, max_volume:).run(max_size:, shard_count:, shard_index:) { puts it }
+Census::Pipeline.new(root:, max_index:, max_volume:, min_index:, min_volume:).run(max_size:, shard_count:, shard_index:) { puts it }
 puts "Done through n=#{max_size} (shard #{shard_index}/#{shard_count})"
