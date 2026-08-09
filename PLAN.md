@@ -58,7 +58,7 @@ Order the sweep so Stages 1–3 run over everything first (most shapes are tiler
 
 One folder per shape — a folder of folders keyed by cube count, then a stable 1-based index within that count:
 
-```
+```sh
 data/
   1/
     1/          # the monocube
@@ -144,7 +144,7 @@ Trust nothing from the solver directly:
 - **Mesh export written directly in Ruby** — STL (the standard 3D-printing mesh format) for single shapes, OBJ/MTL for colored multi-copy assemblies; both are simple text formats, no mesh library needed. GLB for the web gallery can come at M6 from the same certificates.
 - Scripts to Rule Them All:
 
-```
+```sh
 script/setup      # brew install kissat, bundle install
 script/test       # rspec --format progress
 script/enumerate  # generate data/shapes/ for n ≤ N, check counts vs OEIS
