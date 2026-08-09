@@ -309,13 +309,3 @@ Still open from the original plan, both feeding the paper:
 - **The einstein jackpot is not the plan.** Anything in `OPEN` after honest budgets
   is a finding to publish, not a proof of aperiodicity — proving that would be a
   separate (human) project. The census is the contribution either way.
-
-## Week 1
-
-1. Literature pass: "space-filling polycubes", heptacube tiling, 3D Heesch,
-   anisohedral polycubes. Confirm nobody has published the sweep.
-2. Check whether Kaplan's Heesch/isohedral SAT code is public
-   (per _Detecting Isohedral Polyforms with a SAT Solver_,
-   [arXiv:2406.16407](https://arxiv.org/abs/2406.16407)); steal encodings if so.
-3. M1: enumerator + canonical form + OEIS count check.
-4. First SAT round-trip: L-tricube → CNF → kissat → certificate → `script/verify` green.
