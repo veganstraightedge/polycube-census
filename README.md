@@ -1,21 +1,12 @@
 # A Polycube Tiling Census
 
-A machine-verified census of the tiling behavior of every small polycube:
-which shapes tile 3D space, which provably cannot — with their 3D Heesch
-numbers, tabulated for the first time — and which resist classification.
+A machine-verified census of the tiling behavior of every small polycube: which shapes tile 3D space, which provably cannot — with their 3D Heesch numbers, tabulated for the first time — and which resist classification.
 
-In 2D this work has been done: exhaustive censuses classify every small
-polyomino, polyhex, and polyiamond as tiler or non-tiler, crowned by Craig
-Kaplan's [_Heesch Numbers of Unmarked Polyforms_](https://arxiv.org/abs/2105.09438).
-In 3D, no equivalent existed. Even the smallest polycube that fails to tile
-space was undocumented — the 2D answer has been known for decades. This
-census settled that question (the 3×3 square ring, 8 cells — see below) and
-keeps going, in public, with a machine-checkable certificate behind every claim.
+In 2D this work has been done: exhaustive censuses classify every small polyomino, polyhex, and polyiamond as tiler or non-tiler, crowned by Craig Kaplan's [_Heesch Numbers of Unmarked Polyforms_](https://arxiv.org/abs/2105.09438). In 3D, no equivalent existed. Even the smallest polycube that fails to tile space was undocumented — the 2D answer has been known for decades. This census settled that question (the 3×3 square ring, 8 cells — see below) and keeps going, in public, with a machine-checkable certificate behind every claim.
 
 ## Verdicts
 
-Every polycube through `n = 8` cells carries exactly one
-(the `n = 9` sweep is underway):
+Every polycube through `n = 8` cells carries exactly one (the `n = 9` sweep is underway):
 
 | Verdict     | Meaning                                   | Certificate                                        |
 | ----------- | ----------------------------------------- | -------------------------------------------------- |
@@ -23,39 +14,19 @@ Every polycube through `n = 8` cells carries exactly one
 | `NON_TILER` | provably cannot tile                      | an exhausted maximal corona (its Heesch number)    |
 | `OPEN`      | survived every test within stated budgets | the budgets themselves                             |
 
-`OPEN` is the interesting bucket:
-shapes that tile far but have no small periodic pattern.
-Anything that lands there is a candidate for deeper study
-— the 3D analogue of the hunt that produced the 2023 aperiodic monotile.
-(The Hat: [Numberphile 1](https://youtu.be/ArADlJx7SlU),
-[Numberphile 2](https://youtu.be/_ZS3Oqg1AX0).
-Spectre: [Ayliean 1](https://youtu.be/IfVwelta1fE),
-[Ayliean 2](https://youtu.be/sLQrHz7CQf4).)
+`OPEN` is the interesting bucket: shapes that tile far but have no small periodic pattern. Anything that lands there is a candidate for deeper study — the 3D analogue of the hunt that produced the 2023 aperiodic monotile. (The Hat: [Numberphile 1](https://youtu.be/ArADlJx7SlU), [Numberphile 2](https://youtu.be/_ZS3Oqg1AX0). Spectre: [Ayliean 1](https://youtu.be/IfVwelta1fE), [Ayliean 2](https://youtu.be/sLQrHz7CQf4).)
 
 ## Questions this aims to answer
 
-1. Do all 207 polycubes through `n = 6` tile space? (Folklore says yes, but folklore isn't proof.)
-   **Answered: yes — all 207 carry verified certificates.**
-2. What is the smallest polycube that does not tile space?
-   **Answered: [`8/1309`](data/8/1309/shape.json), the flat 3×3 square ring — the only
-   non-simply-connected polycube through `n = 8`, and the unique non-tiler among all
-   8,152 shapes. Every polycube with 1–7 cells tiles space.**
-3. What are the first 3D Heesch numbers? (AFAICT, no table of them already exists anywhere.)
-   **First entry recorded: the square ring has Heesch number 1 — it can be fully wrapped
-   once (28 copies, verified witness) but never twice (corona-2 UNSAT, reproduced by two
-   independent solvers, DRAT proof checked by drat-trim: `s VERIFIED`).**
+1. Do all 207 polycubes through `n = 6` tile space? (Folklore says yes, but folklore isn't proof.) **Answered: yes — all 207 carry verified certificates.**
+2. What is the smallest polycube that does not tile space? **Answered: [`8/1309`](data/8/1309/shape.json), the flat 3×3 square ring — the only non-simply-connected polycube through `n = 8`, and the unique non-tiler among all 8,152 shapes. Every polycube with 1–7 cells tiles space.**
+3. What are the first 3D Heesch numbers? (AFAICT, no table of them already exists anywhere.) **First entry recorded: the square ring has Heesch number 1 — it can be fully wrapped once (28 copies, verified witness) but never twice (corona-2 UNSAT, reproduced by two independent solvers, DRAT proof checked by drat-trim: `s VERIFIED`).**
 4. What is the smallest polycube that tiles only anisohedrally — never tile-transitively?
-5. Does anything through `n = 8` resist classification entirely?
-   **Answered: no. The census through `n = 8` is complete — zero open shapes.**
+5. Does anything through `n = 8` resist classification entirely? **Answered: no. The census through `n = 8` is complete — zero open shapes.**
 
 ## How it works
 
-Each shape runs a gauntlet of increasingly expensive stages,
-stopping at the first certificate:
-translation-lattice check, box tiling, periodic tiling on skew tori,
-then corona-by-corona SAT (Boolean satisfiability)
-search until the shape is certified either way or budgets are exhausted.
-Details, definitions, and decision log: [PLAN.md](PLAN.md).
+Each shape runs a gauntlet of increasingly expensive stages, stopping at the first certificate: translation-lattice check, box tiling, periodic tiling on skew tori, then corona-by-corona SAT (Boolean satisfiability) search until the shape is certified either way or budgets are exhausted. Details, definitions, and decision log: [PLAN.md](PLAN.md).
 
 Three rules keep it honest:
 
@@ -76,38 +47,16 @@ data/
   9/48311/shape.json
 ```
 
-Indices are assigned once, by lexicographic order of canonical forms, and never renumbered
-— `6/122` is a citable name whose ID is literally its path.
-Records carry the shape's geometry
-(canonical cells, symmetry order, chirality, a link to its mirror twin)
-and its verdict fields, which fill in as the pipeline runs.
-Meshes (`model.stl`, tiling and corona assemblies)
-are generated from certificates and land beside each record.
+Indices are assigned once, by lexicographic order of canonical forms, and never renumbered — `6/122` is a citable name whose ID is literally its path. Records carry the shape's geometry (canonical cells, symmetry order, chirality, a link to its mirror twin) and its verdict fields, which fill in as the pipeline runs. Meshes (`model.stl`, tiling and corona assemblies) are generated from certificates and land beside each record.
 
 ## Status
 
 - [x] **M1 — Enumeration.** All 8,152 shapes through `n = 8` with counts matching OEIS [A000162](https://oeis.org/A000162) and [A038119](https://oeis.org/A038119) exactly.
 - [x] **M2 — SAT plumbing.** Box and torus stages with everything through `n = 4` certified.
-- [x] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILER` certificates
-      (16 of 29 pentacubes and 68 of 166 hexacubes tile a box within budget; the rest
-      are periodic via skew lattices — many are translations-only lattice tiles).
-- [x] **M4 — The heptacube sweep.** All 1,023 heptacubes tile space (36 box, 987 skew-lattice) —
-      so the smallest non-tiling polycube, if any exists through `n = 8`, has exactly 8 cells.
-      A first divergence from 2D, where non-tilers already appear among the heptominoes.
-- [x] **M5 — N8.** Sweep: 6,921 of 6,922 octacubes tile (383 box, 6,538 skew-lattice),
-      all certificates independently verified. The lone holdout,
-      [`8/1309`](data/8/1309/shape.json) — the flat 3×3 square ring (the holey octomino) —
-      is a certified **non-tiler with Heesch number 1**: its hole is an open channel
-      that perpendicular rings can thread, and chainmail gets exactly one layer —
-      corona-1 has a verified 28-copy witness, corona-2 is UNSAT (kissat and CaDiCaL
-      agree; DRAT proof checked by drat-trim: `s VERIFIED`). The census through
-      `n = 8` is complete: zero open shapes. WHUTS cross-check done — all 261
-      tesseract unfoldings imported with per-shape solver credits.
-- [ ] **N9 — sweep (underway).** All 48,311 nonacubes enumerated, counts
-      matching OEIS exactly; 48,200 certified tilers (782 box, 47,418 skew-lattice),
-      every certificate independently verified. 111 survivors — 60 mirror classes,
-      none containing the ring as a subshape — now in raised-budget triage, with
-      surround/corona next for whatever resists.
+- [x] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILER` certificates (16 of 29 pentacubes and 68 of 166 hexacubes tile a box within budget; the rest are periodic via skew lattices — many are translations-only lattice tiles).
+- [x] **M4 — The heptacube sweep.** All 1,023 heptacubes tile space (36 box, 987 skew-lattice) — so the smallest non-tiling polycube, if any exists through `n = 8`, has exactly 8 cells. A first divergence from 2D, where non-tilers already appear among the heptominoes.
+- [x] **M5 — N8.** Sweep: 6,921 of 6,922 octacubes tile (383 box, 6,538 skew-lattice), all certificates independently verified. The lone holdout, [`8/1309`](data/8/1309/shape.json) — the flat 3×3 square ring (the holey octomino) — is a certified **non-tiler with Heesch number 1**: its hole is an open channel that perpendicular rings can thread, and chainmail gets exactly one layer — corona-1 has a verified 28-copy witness, corona-2 is UNSAT (kissat and CaDiCaL agree; DRAT proof checked by drat-trim: `s VERIFIED`). The census through `n = 8` is complete: zero open shapes. WHUTS cross-check done — all 261 tesseract unfoldings imported with per-shape solver credits.
+- [ ] **N9 — sweep (underway).** All 48,311 nonacubes enumerated, counts matching OEIS exactly; 48,200 certified tilers (782 box, 47,418 skew-lattice), every certificate independently verified. 111 survivors — 60 mirror classes, none containing the ring as a subshape — now in raised-budget triage, with surround/corona next for whatever resists.
 - [ ] **M6 — Publish.** Browsable gallery.
 - [ ] **M7 — Publish.** OEIS sequences.
 - [ ] **M8 — Publish.** Paper.
@@ -144,9 +93,7 @@ Ruby version is pinned in `.ruby-version`.
 
 ## Author and license
 
-By [Shane Becker](https://veganstraightedge.com).
-Dedicated to the public domain under [CC0 1.0](LICENSE)
-— reuse anything, credit is appreciated but not required.
+By [Shane Becker](https://veganstraightedge.com). Dedicated to the public domain under [CC0 1.0](LICENSE) — reuse anything, credit is appreciated but not required.
 
 ---
 
