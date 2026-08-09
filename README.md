@@ -7,14 +7,15 @@ numbers, tabulated for the first time — and which resist classification.
 In 2D this work has been done: exhaustive censuses classify every small
 polyomino, polyhex, and polyiamond as tiler or non-tiler, crowned by Craig
 Kaplan's [_Heesch Numbers of Unmarked Polyforms_](https://arxiv.org/abs/2105.09438).
-In 3D, no equivalent exists. Even the smallest polycube that fails to tile
-space appears to be undocumented — the 2D answer has been known for decades.
-This project builds the 3D census in public, with a machine-checkable
-certificate behind every claim.
+In 3D, no equivalent existed. Even the smallest polycube that fails to tile
+space was undocumented — the 2D answer has been known for decades. This
+census settled that question (the 3×3 square ring, 8 cells — see below) and
+keeps going, in public, with a machine-checkable certificate behind every claim.
 
 ## Verdicts
 
-Every polycube through `n = 8` cells gets exactly one:
+Every polycube through `n = 8` cells carries exactly one
+(the `n = 9` sweep is underway):
 
 | Verdict     | Meaning                                   | Certificate                                        |
 | ----------- | ----------------------------------------- | -------------------------------------------------- |
@@ -72,7 +73,7 @@ data/
   ...
   6/122/shape.json   # "6/122" is this shape's permanent id
   ...
-  8/6922/shape.json
+  9/48311/shape.json
 ```
 
 Indices are assigned once, by lexicographic order of canonical forms, and never renumbered
@@ -93,14 +94,20 @@ are generated from certificates and land beside each record.
 - [x] **M4 — The heptacube sweep.** All 1,023 heptacubes tile space (36 box, 987 skew-lattice) —
       so the smallest non-tiling polycube, if any exists through `n = 8`, has exactly 8 cells.
       A first divergence from 2D, where non-tilers already appear among the heptominoes.
-- [ ] **M5 — N8.** Sweep done: 6,921 of 6,922 octacubes tile (383 box, 6,538 skew-lattice),
-      all certificates independently verified. The lone survivor is
-      [`8/1309`](data/8/1309/shape.json) — the flat 3×3 square ring (the holey octomino),
-      `OPEN`: provably no box through 16 copies, no periodic block through 64 cells.
-      In 3D its hole is an open channel that perpendicular rings can thread, so the
-      question it poses is: can chainmail fill space?
-      Still to do: corona/Heesch stage for `8/1309`, WHUTS cross-check of the 261
-      tesseract unfoldings.
+- [x] **M5 — N8.** Sweep: 6,921 of 6,922 octacubes tile (383 box, 6,538 skew-lattice),
+      all certificates independently verified. The lone holdout,
+      [`8/1309`](data/8/1309/shape.json) — the flat 3×3 square ring (the holey octomino) —
+      is a certified **non-tiler with Heesch number 1**: its hole is an open channel
+      that perpendicular rings can thread, and chainmail gets exactly one layer —
+      corona-1 has a verified 28-copy witness, corona-2 is UNSAT (kissat and CaDiCaL
+      agree; DRAT proof checked by drat-trim: `s VERIFIED`). The census through
+      `n = 8` is complete: zero open shapes. WHUTS cross-check done — all 261
+      tesseract unfoldings imported with per-shape solver credits.
+- [ ] **N9 — stretch sweep (underway).** All 48,311 nonacubes enumerated, counts
+      matching OEIS exactly; 48,200 certified tilers (782 box, 47,418 skew-lattice),
+      every certificate independently verified. 111 survivors — 60 mirror classes,
+      none containing the ring as a subshape — now in raised-budget triage, with
+      surround/corona next for whatever resists.
 - [ ] **M6 — Publish.** Browsable gallery.
 - [ ] **M7 — Publish.** OEIS sequences.
 - [ ] **M8 — Publish.** Paper.
@@ -109,7 +116,7 @@ are generated from certificates and land beside each record.
 
 ```sh
 script/setup        # brew bundle (kissat) + bundle install
-script/enumerate 8  # regenerate data/, verified against OEIS
+script/enumerate 9  # regenerate data/, verified against OEIS
 script/test         # specs + linter
 ```
 

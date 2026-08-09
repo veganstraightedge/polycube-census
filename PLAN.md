@@ -8,7 +8,7 @@ which has no 3D counterpart.
 
 ## Goal
 
-For every polycube up to size 8, produce a verdict with a machine-checkable certificate:
+For every polycube up to size 9, produce a verdict with a machine-checkable certificate:
 
 - `TILER` — with the strongest certificate found (translation lattice, box, or periodic block)
 - `NON_TILER` — with its 3D Heesch number and the frozen maximal corona
@@ -37,10 +37,12 @@ Headline unclaimed facts this settles, in order of reachability:
 | 6   |                                                          166 |                                                     112 |               207 |
 | 7   |                                                        1,023 |                                                     607 |             1,230 |
 | 8   |                                                        6,922 |                                                   3,811 |             8,152 |
+| 9   |                                                       48,311 |                                                  25,413 |            56,463 |
 
 P tiles iff its mirror tiles (reflect the whole tiling), so compute once per
 mirror-identified class (753 classes through n=7) and report per shape.
-First paper target: n ≤ 7. Stretch: n = 8.
+First paper target: n ≤ 8 (complete — the square ring theorem, below).
+Stretch, underway: n = 9.
 
 ## Definitions (decision log)
 
@@ -108,6 +110,10 @@ data/
     1/
     ...
     6922/
+  9/
+    1/
+    ...
+    48311/
 ```
 
 Each shape folder holds:
@@ -152,9 +158,9 @@ permanent, citable name for a shape.
     "placements": [{ "rotation": 5, "offset": [0, 0, 0] }]
   },
   "heesch": null,
-  "budgets": { "max_torus_index": 56, "max_corona": 3, "solver_seconds": 41.2 },
+  "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
   "credits": {
-    "solved_by": "census-pipeline v1.0",
+    "solved_by": "polycube-census v0.1.0",
     "verified_by": null,
     "prior_art": null
   }
@@ -229,6 +235,11 @@ script/gallery    # emit STLs and renders
   Moritz Firsching's code, independently verified by Georgios Papoutsis) —
   import their tilings as certificates with per-shape solver credits, and use the
   overlap as an external cross-check of our pipeline.
+  (Done — including the square ring resolution below and the WHUTS import.)
+- **N9 — stretch sweep (added 2026-07, underway).** Enumerate the 48,311
+  nonacubes (OEIS-exact), run the full gauntlet, triage the survivors. Sweep
+  found 48,200 tilers; 111 survivors (60 mirror classes, none ring-derived)
+  in raised-budget triage, surround/corona next.
 - **M6 — Publish: gallery.** Browsable gallery generated from certificates,
   printed record-holders.
 - **M7 — Publish: OEIS.** New sequences submitted (number of n-polycubes that tile
@@ -240,33 +251,27 @@ script/gallery    # emit STLs and renders
 
 ## The square ring (8/1309): does chainmail tile?
 
-The census's sole open shape through n=8 — the flat 3×3 ring, the only
-non-simply-connected polycube in range. Resolution plan, in order:
+**RESOLVED: no.** The flat 3×3 ring — the only non-simply-connected polycube
+in range — has Heesch number 1 and is the unique smallest non-tiling polycube.
+The original plan (surround test → Heesch escalation → deeper periodic search
+in parallel) ran to completion:
 
-1. **Literature pass (done, preliminary).** 2026-07-06 searches found nothing
-   settling it: 2D octomino packings, interlocking-complexity results, chainmail
-   topology — but not this question. Deeper pass through puzzle literature
-   before writing anything up.
-2. **The surround test (corona 1).** One SAT instance: seed ring fixed, copies
-   touching it, every frontier cell (including the hole) covered, no overlaps.
-   UNSAT ⇒ Heesch 0 ⇒ certified non-tiler ⇒ the smallest non-tiling polycube
-   (headline theorem). Capture the DRAT proof on this run and check it with
-   drat-trim — that UNSAT would be the result. SAT ⇒ render the wrap, go deeper.
-3. **Heesch escalation.** Corona 2, 3, … until UNSAT at k+1: Heesch = k, first
-   nontrivial 3D Heesch number on record. Needs a scalable at-most-one encoding
-   (sequential counters, not pairwise) and tight region bounds.
-4. **Deeper periodic search, in parallel.** Torus index 72 → 96 → 128, after
-   deduplicating the lattice list under the 24 rotations (~order-of-magnitude
-   cut). A moderate-period tiling here flips the verdict to TILER.
-5. **Pen-and-paper track.** Counting argument: one hole per ring, one donated
-   cell per hole, and only the 4 edge-middle cells of a ring can sit in a hole
-   (hand-checked; corners cannot). Push toward a parity contradiction; even
-   partial results are lemmas. Print open-loop rings for physical intuition.
+- **Corona 1 is SAT:** a verified 28-copy wrap — chainmail gets one layer.
+  Witness frozen in `data/8/1309/corona1.json`, rechecked by `script/verify`.
+- **Corona 2 is UNSAT:** reproduced by kissat and CaDiCaL; DRAT proof checked
+  by drat-trim (`s VERIFIED`); CNF instances published under `data/8/1309/cnf/`.
+- **No periodic escape:** no box through volume 128 (16 copies), no periodic
+  block through lattice index 152 (19 rings), after lattice-orbit dedup under
+  the 24 rotations (~20x fewer solves).
 
-If coronas stay SAT and tori stay UNSAT at large budgets: einstein-candidate
-protocol — maximum suspicion, honest budgets, publish the shortlist as OPEN.
+Still open from the original plan, both feeding the paper:
 
-All solver runs are Shane's to execute; encodings and specs land here first.
+- **Pen-and-paper track.** Counting argument: one hole per ring, one donated
+  cell per hole, and only the 4 edge-middle cells of a ring can sit in a hole
+  (hand-checked; corners cannot). Target: a human-readable hole-cascade proof
+  of corona-2 impossibility; even partial results are lemmas.
+- **Deeper literature pass** through puzzle literature before any write-up
+  (passive only until comms open, per the scoop-risk policy below).
 
 ## Someday / future
 
