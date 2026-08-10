@@ -73,6 +73,16 @@ RSpec.describe Census::Pipeline do
       end
     end
 
+    it "processes exactly the ids handed to run_ids, nothing else" do
+      Dir.mktmpdir do |root|
+        Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 3))
+        described_class.new(root:).run_ids(["3/2"])
+        bent = JSON.parse(File.read(File.join(root, "3/2/shape.json")), symbolize_names: true)
+        straight = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
+        expect([bent[:verdict], straight[:verdict]]).to eq(["tiler", nil])
+      end
+    end
+
     it "stops between shapes when the stop file appears, keeping finished work" do
       Dir.mktmpdir do |root|
         Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 3))
