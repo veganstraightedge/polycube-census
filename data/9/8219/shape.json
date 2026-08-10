@@ -5,11 +5,11 @@
   "symmetry_order": 1,
   "chiral": true,
   "mirror_id": "9/8220",
-  "verdict": null,
-  "tiles_rotations_only": null,
-  "tiles_with_reflections": null,
-  "certificate": null,
-  "heesch": null,
-  "budgets": {},
-  "credits": {"solved_by":null,"verified_by":null,"prior_art":null}
+  "verdict": "non_tiler",
+  "tiles_rotations_only": false,
+  "tiles_with_reflections": false,
+  "certificate": {"type":"heesch","heesch":1,"refutation":"cnf/corona2.drat"},
+  "heesch": 1,
+  "budgets": {"corona_depth":2},
+  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null}
 }
