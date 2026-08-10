@@ -30,6 +30,16 @@ module Census
       end
     end
 
+    # Explicit work-list mode: process exactly these ids (e.g. "9/2650"),
+    # skipping discovery. The dealt-not-discovered half of a work queue.
+    def run_ids(ids, &report)
+      ids.each do |id|
+        return if stop_requested?
+
+        process(root.join(id, "shape.json").to_s, &report)
+      end
+    end
+
     def stop_requested? = File.exist?(stop_path)
 
     private

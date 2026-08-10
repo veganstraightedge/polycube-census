@@ -12,6 +12,8 @@
 #                                         # raised-budget probe of survivors
 #   script/census [max_n] --min-volume 96 --min-index 48 --max-volume 128 --max-index 72
 #                                         # ... skipping budgets a prior run exhausted
+#   script/census --ids 9/2650,9/2671     # exactly these shapes, no discovery —
+#                                         # deal disjoint lists to parallel workers
 #
 # Shards touch disjoint files, so parallel workers never race.
 
@@ -25,6 +27,7 @@ def option(arguments, flag, default)
 end
 
 arguments = ARGV.dup
+ids = option(arguments, "--ids", nil)
 shard_index, shard_count = option(arguments, "--shard", "1/1").split("/").map { Integer(it) }
 max_volume = Integer(option(arguments, "--max-volume", Census::BoxSearch::DEFAULT_MAX_VOLUME))
 max_index = Integer(option(arguments, "--max-index", Census::TorusSearch::DEFAULT_MAX_INDEX))
@@ -36,7 +39,11 @@ stop_path = File.expand_path("../STOP", __dir__)
 abort "STOP file present — remove it to start: #{stop_path}" if File.exist?(stop_path)
 
 pipeline = Census::Pipeline.new(root:, max_index:, max_volume:, min_index:, min_volume:)
-pipeline.run(max_size:, shard_count:, shard_index:) { puts it }
+if ids
+  pipeline.run_ids(ids.split(",")) { puts it }
+else
+  pipeline.run(max_size:, shard_count:, shard_index:) { puts it }
+end
 if pipeline.stop_requested?
   puts "STOP honored — exiting after current shape (shard #{shard_index}/#{shard_count})"
 else
