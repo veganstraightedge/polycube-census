@@ -19,24 +19,56 @@ propagated = 0
 
     twin_path = File.join(root, "#{record[:mirror_id]}/shape.json")
     twin_record = JSON.parse(File.read(twin_path), symbolize_names: true)
-    next unless %w[box torus].include?(twin_record.dig(:certificate, :type))
-
     shape = Census::Polycube.new(cells: twin_record[:cells])
     twin = Census::Polycube.new(cells: record[:cells])
-    certificate = Census::MirroredCertificate.new(certificate: twin_record[:certificate], shape:, twin:).certificate
-    raise "mirrored certificate failed verification for #{record[:id]}" unless Census::Verifier.new(certificate:, shape: twin).valid?
 
-    stamped = record.merge(
-      verdict: "tiler",
-      tiles_rotations_only: true,
-      tiles_with_reflections: true,
-      certificate:,
-      budgets: twin_record[:budgets],
-      credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION} (mirrored from #{twin_record[:id]})")
-    )
-    File.write(path, Census::JSONDocument.generate(stamped))
-    puts "#{record[:id]}  tiler  mirrored from #{twin_record[:id]} (verified)"
-    propagated += 1
+    case twin_record.dig(:certificate, :type)
+    when "box", "torus"
+      certificate = Census::MirroredCertificate.new(certificate: twin_record[:certificate], shape:, twin:).certificate
+      raise "mirrored certificate failed verification for #{record[:id]}" unless Census::Verifier.new(certificate:, shape: twin).valid?
+
+      stamped = record.merge(
+        verdict: "tiler",
+        tiles_rotations_only: true,
+        tiles_with_reflections: true,
+        certificate:,
+        budgets: twin_record[:budgets],
+        credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION} (mirrored from #{twin_record[:id]})")
+      )
+      File.write(path, Census::JSONDocument.generate(stamped))
+      puts "#{record[:id]}  tiler  mirrored from #{twin_record[:id]} (verified)"
+      propagated += 1
+    when "heesch"
+      # A tiling of the twin would reflect to a tiling of the solved shape,
+      # which its refutation forbids — so the twin is a non-tiler with the
+      # same Heesch number. Mirror the corona-1 witness and verify it.
+      witness_path = File.join(root, "#{twin_record[:id]}/corona1.json")
+      next unless File.exist?(witness_path)
+
+      compact = JSON.parse(File.read(witness_path), symbolize_names: true)
+      mirrored = Census::MirroredWitness.new(placements: compact, shape:, twin:).placements
+      surround = Census::Surround.new(shape: twin)
+      reconstructed = mirrored.map { it.merge(cells: Census::Assembly.placed_cells(it, twin)) }
+      raise "mirrored witness failed verification for #{record[:id]}" unless surround.verified?(reconstructed)
+
+      File.write(File.join(root, "#{record[:id]}/corona1.json"), "#{JSON.generate(mirrored)}\n")
+      stamped = record.merge(
+        verdict: "non_tiler",
+        tiles_rotations_only: false,
+        tiles_with_reflections: false,
+        certificate: {
+          type: "heesch",
+          heesch: twin_record[:heesch],
+          refutation: "mirror of #{twin_record[:id]} — data/#{twin_record[:id]}/#{twin_record.dig(:certificate, :refutation)}"
+        },
+        heesch: twin_record[:heesch],
+        budgets: twin_record[:budgets],
+        credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION} (mirrored from #{twin_record[:id]})")
+      )
+      File.write(path, Census::JSONDocument.generate(stamped))
+      puts "#{record[:id]}  non_tiler  heesch #{twin_record[:heesch]}  mirrored from #{twin_record[:id]} (witness verified)"
+      propagated += 1
+    end
   end
 end
 
