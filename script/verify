@@ -17,6 +17,13 @@ failures = []
 
 Dir.glob(File.join(root, "*", "*", "shape.json")).sort.each do |path|
   record = JSON.parse(File.read(path), symbolize_names: true)
+
+  # D2 invariant: an achiral shape's 48-isometry placement set equals its
+  # 24-rotation set, so the two tiling columns can never legitimately differ.
+  if record[:chiral] == false && record[:tiles_rotations_only] != record[:tiles_with_reflections]
+    failures << "#{record[:id]} (achiral D2 invariant)"
+  end
+
   certificate = record[:certificate]
   if certificate.nil?
     unresolved += 1

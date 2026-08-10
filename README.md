@@ -76,6 +76,11 @@ Ruby version is pinned in `.ruby-version`.
 - [BurrTools](https://burrtools.sourceforge.net) — independent cross-check for box tilings
 - [Kaplan, _Heesch Numbers of Unmarked Polyforms_](https://arxiv.org/abs/2105.09438) and [isohedral/heesch-sat](https://github.com/isohedral/heesch-sat) — the 2D prior art and inspiration for this census
 - [Kaplan, _Detecting Isohedral Polyforms with a SAT Solver_](https://arxiv.org/abs/2406.16407) — the SAT approach to isohedrality, relevant to the smallest-anisohedral-polycube question
+- [Myers, _Polyform tiling_](https://www.polyomino.org.uk/mathematics/polyform-tiling/) — the software and data behind the 2D tiling censuses (2000–2024), this repo's closest sibling; his anisohedral enumerations ([OEIS A075206](https://oeis.org/A075206)) are the 2D baseline for the anisohedral question
+- Keating & Vince, _Isohedral polyomino tiling of the plane_ (Discrete Comput. Geom. 21, 1999) and Langerman & Winslow (SoCG 2016) — fast 2D isohedral decision procedures with no 3D counterpart (see PLAN.md on why)
+- Rhoads, _Planar tilings and the search for an aperiodic prototile_ (PhD diss., Rutgers 2003) — search-census methodology, pre-SAT
+- Bašić, _A figure with Heesch number 6_ (Math. Intelligencer 43(3), 2021) — the standing 2D Heesch record, calibration for our 3D table
+- Brakensiek–Heule–Mackey–Narváez, _Keller's conjecture in dimension 7_ (2020) — a cube-tiling problem resolved by reduction to SAT; the closest methodological kin to this census
 - [OEIS](https://oeis.org) — ground truth for counts, and will be the destination for any new sequences
 - [The Poly Pages](http://www.recmath.com/PolyPages/PolyPages/Tiling.htm) — the hand-found folklore that this census aims to certify
 - [WHUTS](https://whuts.org) — hypercube unfoldings (a slice of our `n = 8`), and an example of attribution/credit to contributors (solvers/verifiers)
