@@ -4,3 +4,7 @@ PLAN_*.md
 experiments/
 vendor/
 whitepapers--readlater/
+
+# SAT artifacts over GitHub's 100 MB cap — destined for S3, linked from .md files
+data/9/2127/cnf/
+data/9/8219/cnf/
