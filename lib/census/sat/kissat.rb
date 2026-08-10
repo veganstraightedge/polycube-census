@@ -23,12 +23,12 @@ module Census
           return IPASIR.solve(instance)
         end
         if instance_path
-          File.write(instance_path, instance.to_dimacs)
+          File.open(instance_path, "w") { instance.write_dimacs(it) }
           return run(instance_path, proof_path:, progress:)
         end
 
         Tempfile.create(["census", ".cnf"]) do |file|
-          file.write(instance.to_dimacs)
+          instance.write_dimacs(file)
           file.flush
           run(file.path, proof_path:, progress:)
         end

@@ -12,6 +12,19 @@ RSpec.describe Census::SAT::Instance do
     end
   end
 
+  describe "#write_dimacs" do
+    it "streams the identical DIMACS to an IO without building one giant string" do
+      instance = described_class.new
+      instance.new_variable
+      instance.new_variable
+      instance.add_clause([1, 2])
+      instance.add_clause([-1])
+      io = StringIO.new
+      instance.write_dimacs(io)
+      expect(io.string).to eq(instance.to_dimacs)
+    end
+  end
+
   describe "#add_at_most_one" do
     it "refuses two of the constrained literals being true together" do
       instance = described_class.new

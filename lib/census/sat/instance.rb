@@ -37,6 +37,16 @@ module Census
         clauses.each { lines << "#{it.join(' ')} 0" }
         "#{lines.join("\n")}\n"
       end
+
+      # Same DIMACS, streamed in chunks: multi-million-clause instances never
+      # exist as one giant string in memory (which is what OOM-killed the
+      # first depth-3 corona attempt).
+      def write_dimacs(io, chunk_size: 10_000)
+        io.write("p cnf #{variable_count} #{clauses.size}\n")
+        clauses.each_slice(chunk_size) do |slice|
+          io.write(slice.map { "#{it.join(' ')} 0\n" }.join)
+        end
+      end
     end
   end
 end
