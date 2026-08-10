@@ -8,23 +8,33 @@ module Census
                    max_index: TorusSearch::DEFAULT_MAX_INDEX,
                    max_volume: BoxSearch::DEFAULT_MAX_VOLUME,
                    min_index: 0,
-                   min_volume: 0)
+                   min_volume: 0,
+                   stop_path: nil)
       @root = Pathname(root)
       @max_index = max_index
       @max_volume = max_volume
       @min_index = min_index
       @min_volume = min_volume
+      @stop_path = stop_path || @root.join("..", "STOP")
     end
 
+    # A graceful shutdown between shapes: touch the stop file and every worker
+    # finishes its current shape, keeps its stamps, and returns.
     def run(max_size:, shard_count: 1, shard_index: 1, &report)
       (1..max_size).each do |size|
-        record_paths(size, shard_count:, shard_index:).each { process(it, &report) }
+        record_paths(size, shard_count:, shard_index:).each do |path|
+          return if stop_requested?
+
+          process(path, &report)
+        end
       end
     end
 
+    def stop_requested? = File.exist?(stop_path)
+
     private
 
-    attr_reader :max_index, :max_volume, :min_index, :min_volume, :root
+    attr_reader :max_index, :max_volume, :min_index, :min_volume, :root, :stop_path
 
     def record_paths(size, shard_count:, shard_index:)
       Dir.glob(root.join(size.to_s, "*", "shape.json").to_s)

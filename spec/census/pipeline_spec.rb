@@ -73,6 +73,24 @@ RSpec.describe Census::Pipeline do
       end
     end
 
+    it "stops between shapes when the stop file appears, keeping finished work" do
+      Dir.mktmpdir do |root|
+        Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 3))
+        stop_path = File.join(root, "STOP")
+        solved = []
+        described_class.new(root:, stop_path:).run(max_size: 3) do |line|
+          solved << line
+          File.write(stop_path, "") if line.include?("tiler")
+        end
+        first_tiler = solved.index { it.include?("tiler") }
+        expect(solved[(first_tiler + 1)..]).to be_empty
+        verdicts = Dir.glob("*/*/shape.json", base: root)
+                      .map { JSON.parse(File.read(File.join(root, it)))["verdict"] }
+        expect(verdicts.compact).not_to be_empty
+        expect(verdicts).to include(nil)
+      end
+    end
+
     it "skips shapes that already carry a verdict" do
       Dir.mktmpdir do |root|
         Census::DataWriter.new(root:).write(Census::Enumeration.new(max_size: 1))

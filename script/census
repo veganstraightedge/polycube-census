@@ -32,6 +32,13 @@ min_volume = Integer(option(arguments, "--min-volume", 0))
 min_index = Integer(option(arguments, "--min-index", 0))
 max_size = Integer(arguments.fetch(0, "8"))
 root = File.expand_path("../data", __dir__)
+stop_path = File.expand_path("../STOP", __dir__)
+abort "STOP file present — remove it to start: #{stop_path}" if File.exist?(stop_path)
 
-Census::Pipeline.new(root:, max_index:, max_volume:, min_index:, min_volume:).run(max_size:, shard_count:, shard_index:) { puts it }
-puts "Done through n=#{max_size} (shard #{shard_index}/#{shard_count})"
+pipeline = Census::Pipeline.new(root:, max_index:, max_volume:, min_index:, min_volume:)
+pipeline.run(max_size:, shard_count:, shard_index:) { puts it }
+if pipeline.stop_requested?
+  puts "STOP honored — exiting after current shape (shard #{shard_index}/#{shard_count})"
+else
+  puts "Done through n=#{max_size} (shard #{shard_index}/#{shard_count})"
+end
