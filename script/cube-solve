@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Cube-and-conquer runner: solve every cube of a split formula in parallel,
+# checkpointing each verdict so crashes and kills cost one cube, not the run.
+#
+# Usage: script/cube-solve <formula.cnf> <cubes.icnf> [--jobs N] [--solver kissat]
+#
+#   any cube SATISFIABLE   => formula SATISFIABLE (model saved, run stops)
+#   all cubes UNSATISFIABLE => formula UNSATISFIABLE (modulo the cube cover,
+#                              which march guarantees by construction)
+#
+# Results ledger: <cubes.icnf>.results.jsonl — one line per solved cube.
+# Re-running resumes: solved cubes are skipped. Touch STOP (repo root) for a
+# graceful drain between cubes.
+
+require_relative "../lib/census"
+require "json"
+
+arguments = ARGV.dup
+
+def option(arguments, flag, default)
+  return default unless (position = arguments.index(flag))
+
+  arguments.delete_at(position)
+  arguments.delete_at(position)
+end
+
+jobs = Integer(option(arguments, "--jobs", "8"))
+solver = option(arguments, "--solver", "kissat")
+cnf_path = arguments.fetch(0)
+cubes_path = arguments.fetch(1)
+results_path = "#{cubes_path}.results.jsonl"
+stop_path = File.expand_path("../STOP", __dir__)
+
+cubes = Census::SAT::CubeFile.new(path: cubes_path).cubes
+solved = {}
+if File.exist?(results_path)
+  File.foreach(results_path) do |line|
+    record = JSON.parse(line, symbolize_names: true)
+    solved[record[:cube]] = record[:verdict]
+  end
+end
+
+if (satisfied = solved.find { |_, verdict| verdict == "SATISFIABLE" })
+  abort "cube #{satisfied.first} already SATISFIABLE — formula is SAT; nothing to do"
+end
+
+pending = (0...cubes.size).reject { solved.key?(it) }
+puts "#{cubes.size} cubes, #{solved.size} already solved, #{pending.size} pending, #{jobs} jobs, solver: #{solver}"
+
+queue = Queue.new
+pending.each { queue << it }
+jobs.times { queue << nil }
+
+ledger = Mutex.new
+sat_found = false
+
+workers = jobs.times.map do
+  Thread.new do
+    while (index = queue.pop)
+      break if sat_found || File.exist?(stop_path)
+
+      started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      output = IO.popen([solver], "r+") do |io|
+        Census::SAT::CubeFile.stream_augmented(cnf_path:, cube: cubes[index], io:)
+        io.close_write
+        io.read
+      end
+      seconds = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).round(1)
+      verdict = output[/^s (\w+)/, 1] || "ERROR"
+
+      ledger.synchronize do
+        File.open(results_path, "a") { it.puts(JSON.generate({ cube: index, verdict:, seconds: })) }
+        finished = solved.size + 1
+        solved[index] = verdict
+        puts "#{Time.now.utc.iso8601}  cube #{index}: #{verdict} in #{seconds}s  (#{finished}/#{cubes.size})"
+        if verdict == "SATISFIABLE"
+          File.write("#{cubes_path}.model", output.lines.grep(/^v /).join)
+          sat_found = true
+        end
+      end
+    end
+  end
+end
+workers.each(&:join)
+
+verdicts = solved.values.tally
+puts "done: #{verdicts.inspect}"
+if sat_found
+  puts "s SATISFIABLE — some cube admits a solution; model saved beside the cube file"
+elsif File.exist?(stop_path)
+  puts "STOP honored — resume by re-running the same command"
+elsif solved.size == cubes.size && verdicts.keys == ["UNSATISFIABLE"]
+  puts "s UNSATISFIABLE — every cube refuted; the formula has no solution (modulo cube cover)"
+else
+  puts "incomplete or errors present — inspect #{results_path}"
+end
