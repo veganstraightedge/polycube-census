@@ -84,6 +84,7 @@ Ruby version is pinned in `.ruby-version`.
 - [OEIS](https://oeis.org) — ground truth for counts, and will be the destination for any new sequences
 - [The Poly Pages](http://www.recmath.com/PolyPages/PolyPages/Tiling.htm) — the hand-found folklore that this census aims to certify
 - [WHUTS](https://whuts.org) — hypercube unfoldings (a slice of our `n = 8`), and an example of attribution/credit to contributors (solvers/verifiers)
+- [The polycube unfolding problem](https://en.wikipedia.org/wiki/Polycube) (open) — does every polycube with connected boundary unfold to a polyomino, ideally one that tiles the plane? Independent of our question, but this catalog and toolkit are its natural substrate; see PLAN.md's Someday list
 
 ## Glossary
 
