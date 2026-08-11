@@ -1,7 +1,12 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Generate 3D files beside every record. Usage: script/gallery [max_n]
+# Generate 3D files beside every record.
+#
+# Usage: script/gallery [max_n]
+#        script/gallery [max_n] --shard 2/4    # every 4th shape, starting at 2 —
+#                                              # run one worker per shard in parallel;
+#                                              # shards touch disjoint folders
 #
 # - model.stl        every shape — watertight, printable
 # - tiling.obj/.mtl  tilers — a chunk of the certified tiling, one color per copy
@@ -9,13 +14,21 @@
 
 require_relative "../lib/census"
 
-max_size = Integer(ARGV.fetch(0, "8"))
+arguments = ARGV.dup
+shard_index, shard_count = if (position = arguments.index("--shard"))
+                             arguments.delete_at(position)
+                             arguments.delete_at(position).split("/").map { Integer(it) }
+                           else
+                             [1, 1]
+                           end
+max_size = Integer(arguments.fetch(0, "8"))
 root = File.expand_path("../data", __dir__)
 written = 0
 
 (1..max_size).each do |size|
   paths = Dir.glob(File.join(root, size.to_s, "*", "shape.json"))
               .sort_by { Integer(File.basename(File.dirname(it))) }
+              .select { Integer(File.basename(File.dirname(it))) % shard_count == shard_index % shard_count }
   paths.each do |path|
     directory = File.dirname(path)
     record = JSON.parse(File.read(path), symbolize_names: true)
