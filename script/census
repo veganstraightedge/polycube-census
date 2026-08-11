@@ -39,10 +39,11 @@ stop_path = File.expand_path("../STOP", __dir__)
 abort "STOP file present — remove it to start: #{stop_path}" if File.exist?(stop_path)
 
 pipeline = Census::Pipeline.new(root:, max_index:, max_volume:, min_index:, min_volume:)
+stamp_line = ->(line) { puts "#{Time.now.utc.iso8601}  #{line}" }
 if ids
-  pipeline.run_ids(ids.split(",")) { puts it }
+  pipeline.run_ids(ids.split(","), &stamp_line)
 else
-  pipeline.run(max_size:, shard_count:, shard_index:) { puts it }
+  pipeline.run(max_size:, shard_count:, shard_index:, &stamp_line)
 end
 if pipeline.stop_requested?
   puts "STOP honored — exiting after current shape (shard #{shard_index}/#{shard_count})"
