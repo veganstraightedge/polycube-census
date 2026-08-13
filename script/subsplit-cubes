@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Flanking attack for straggler cubes: take the cubes a cube-solve ledger
+# shows as pending, extend each with the next-best k variables (occurrence-
+# ranked, excluding variables already in the cubes), and emit the finer
+# sub-cubes. Run cube-solve on the output (separate ledger) alongside the
+# original stragglers: a region is closed when either its monster cube or
+# all of its sub-cubes are refuted.
+#
+# Usage: script/subsplit-cubes <formula.cnf> <cubes.icnf> <results.jsonl> <extra-k> <output.icnf>
+
+require_relative "../lib/census"
+require "json"
+
+cnf_path = ARGV.fetch(0)
+cubes_path = ARGV.fetch(1)
+results_path = ARGV.fetch(2)
+extra = Integer(ARGV.fetch(3))
+output_path = ARGV.fetch(4)
+
+cubes = Census::SAT::CubeFile.new(path: cubes_path).cubes
+solved = File.readlines(results_path).map { JSON.parse(it)["cube"] }
+pending = (0...cubes.size).to_a - solved
+abort "nothing pending" if pending.empty?
+puts "pending cubes: #{pending.inspect}"
+
+used = cubes.flat_map { it.map(&:abs) }.uniq
+counts = Hash.new(0)
+File.foreach(cnf_path) do |line|
+  next if line.start_with?("p", "c")
+
+  line.split.each do |token|
+    literal = Integer(token)
+    counts[literal.abs] += 1 unless literal.zero?
+  end
+end
+used.each { counts.delete(it) }
+extension = counts.max_by(extra) { |_, count| count }.map(&:first)
+abort "only #{extension.size} unused variables available, need #{extra}" if extension.size < extra
+puts "extension variables: #{extension.inspect}"
+
+File.open(output_path, "w") do |io|
+  pending.each do |index|
+    [1, -1].repeated_permutation(extra) do |signs|
+      literals = cubes[index] + extension.zip(signs).map { |variable, sign| variable * sign }
+      io.puts("a #{literals.join(' ')} 0")
+    end
+  end
+end
+puts "wrote #{pending.size * (2**extra)} sub-cubes to #{output_path}"
