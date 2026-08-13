@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Semantic splitter for negative-corner stragglers: branch each pending cube
+# on the shortest all-positive clause in the formula (a coverage clause —
+# "at least one of these must hold"). Branch i asserts literal q_i positive
+# with q_1..q_{i-1} negated; the final all-negative branch directly violates
+# the clause, so it refutes instantly. No soft corner for hardness to hide in.
+#
+# Usage: script/clause-split-cubes <formula.cnf> <cubes.icnf> <results.jsonl> <output.icnf>
+
+require_relative "../lib/census"
+require "json"
+
+cnf_path = ARGV.fetch(0)
+cubes_path = ARGV.fetch(1)
+results_path = ARGV.fetch(2)
+output_path = ARGV.fetch(3)
+
+cubes = Census::SAT::CubeFile.new(path: cubes_path).cubes
+solved = File.readlines(results_path).map { JSON.parse(it)["cube"] }
+pending = (0...cubes.size).to_a - solved
+abort "nothing pending" if pending.empty?
+puts "pending cubes: #{pending.inspect}"
+
+avoid = pending.flat_map { cubes[it].map(&:abs) }.to_set
+best = nil
+File.foreach(cnf_path) do |line|
+  next if line.start_with?("p", "c")
+
+  literals = line.split.map { Integer(it) }
+  literals.pop # trailing 0
+  next if literals.size < 2 || (best && literals.size >= best.size)
+  next unless literals.all?(&:positive?)
+  next if literals.any? { avoid.include?(it) }
+
+  best = literals
+end
+abort "no usable all-positive clause found" unless best
+puts "branching clause (#{best.size} literals): #{best.inspect}"
+
+File.open(output_path, "w") do |io|
+  pending.each do |index|
+    base = cubes[index]
+    best.each_with_index do |literal, position|
+      branch = base + best.first(position).map { -it } + [literal]
+      io.puts("a #{branch.join(' ')} 0")
+    end
+    io.puts("a #{(base + best.map { -it }).join(' ')} 0") # violates the clause: instant refute
+  end
+end
+puts "wrote #{pending.size * (best.size + 1)} branch cubes to #{output_path}"
