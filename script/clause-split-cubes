@@ -18,7 +18,10 @@ results_path = ARGV.fetch(2)
 output_path = ARGV.fetch(3)
 
 cubes = Census::SAT::CubeFile.new(path: cubes_path).cubes
-solved = File.readlines(results_path).map { JSON.parse(it)["cube"] }
+solved = File.readlines(results_path).filter_map do |line|
+  record = JSON.parse(line)
+  record["cube"] if %w[SATISFIABLE UNSATISFIABLE].include?(record["verdict"])
+end
 pending = (0...cubes.size).to_a - solved
 abort "nothing pending" if pending.empty?
 puts "pending cubes: #{pending.inspect}"

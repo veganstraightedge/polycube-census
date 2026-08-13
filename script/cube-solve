@@ -4,7 +4,12 @@
 # Cube-and-conquer runner: solve every cube of a split formula in parallel,
 # checkpointing each verdict so crashes and kills cost one cube, not the run.
 #
-# Usage: script/cube-solve <formula.cnf> <cubes.icnf> [--jobs N] [--solver kissat]
+# Usage: script/cube-solve <formula.cnf> <cubes.icnf> [--jobs N] [--solver kissat] [--cube-timeout SECONDS]
+#
+# With --cube-timeout, a cube exceeding the limit is killed and recorded as
+# TIMEOUT — freeing its worker, and marking the cube for re-splitting
+# (script/clause-split-cubes treats TIMEOUT/ERROR cubes as pending). Re-runs
+# also re-attempt them.
 #
 #   any cube SATISFIABLE   => formula SATISFIABLE (model saved, run stops)
 #   all cubes UNSATISFIABLE => formula UNSATISFIABLE (modulo the cube cover,
@@ -28,6 +33,7 @@ end
 
 jobs = Integer(option(arguments, "--jobs", "8"))
 solver = option(arguments, "--solver", "kissat")
+cube_timeout = option(arguments, "--cube-timeout", nil)&.then { Integer(it) }
 cnf_path = arguments.fetch(0)
 cubes_path = arguments.fetch(1)
 results_path = "#{cubes_path}.results.jsonl"
@@ -46,6 +52,8 @@ if (satisfied = solved.find { |_, verdict| verdict == "SATISFIABLE" })
   abort "cube #{satisfied.first} already SATISFIABLE — formula is SAT; nothing to do"
 end
 
+# TIMEOUT/ERROR verdicts are unfinished business: re-attempt on re-run.
+solved.reject! { |_, verdict| %w[TIMEOUT ERROR].include?(verdict) }
 pending = (0...cubes.size).reject { solved.key?(it) }
 puts "#{cubes.size} cubes, #{solved.size} already solved, #{pending.size} pending, #{jobs} jobs, solver: #{solver}"
 
@@ -62,13 +70,23 @@ workers = jobs.times.map do
       break if sat_found || File.exist?(stop_path)
 
       started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      timed_out = false
       output = IO.popen([solver], "r+") do |io|
+        watchdog = cube_timeout && Thread.new do
+          sleep(cube_timeout)
+          timed_out = true
+          Process.kill("KILL", io.pid)
+        rescue StandardError
+          nil
+        end
         Census::SAT::CubeFile.stream_augmented(cnf_path:, cube: cubes[index], io:)
         io.close_write
-        io.read
+        result = io.read
+        watchdog&.kill
+        result
       end
       seconds = (Process.clock_gettime(Process::CLOCK_MONOTONIC) - started).round(1)
-      verdict = output[/^s (\w+)/, 1] || "ERROR"
+      verdict = output[/^s (\w+)/, 1] || (timed_out ? "TIMEOUT" : "ERROR")
 
       ledger.synchronize do
         File.open(results_path, "a") { it.puts(JSON.generate({ cube: index, verdict:, seconds: })) }
