@@ -135,6 +135,8 @@ Index stability rule: within each n, shapes are numbered by the lexicographic or
 
 `cells` is the canonical form: translate to the origin corner, take the lexicographically minimal cell list over all 24 rotations.
 
+Schema semantics (2026-08-14 migration): **`budgets`** records the search limits a shape was given (box volume, torus index, corona depth attempted); **`reached`** records outcomes (`corona_sat: k` — a verified depth-k witness exists; `corona_refuted: k` — depth k proven impossible), so "we gave up here" and "we proved it here" can never be confused. Heesch certificates carry their convention and provenance inline: `adjacency: "26"` (D3's corona definition — the number is meaningless without it), `refutation_sha256` (checksum of the DRAT artifact, which may live outside git), and `solved_with` (solver + version + verification notes). The tiling booleans are tri-state: `true`/`false` are proven claims; `null` means undetermined within stated budgets.
+
 Credits follow the [WHUTS](https://whuts.org) model: every verdict names its solver (a human, or the pipeline at a specific version) and, once someone independently rechecks it, its verifier. Where a shape was already settled by prior work — the 261 tesseract unfoldings on WHUTS, hand-found Poly Pages patterns — import the solution as a certificate, cross-check it, and credit the original solver with a link in `prior_art`.
 
 ## Verification

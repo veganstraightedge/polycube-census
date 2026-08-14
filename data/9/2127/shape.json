@@ -10,6 +10,7 @@
   "tiles_with_reflections": null,
   "certificate": null,
   "heesch": null,
-  "budgets": {"box_max_volume":128,"corona_sat_depth":2,"torus_max_index":72},
-  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null}
+  "budgets": {"box_max_volume":128,"torus_max_index":72},
+  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null},
+  "reached": {"corona_sat":2}
 }

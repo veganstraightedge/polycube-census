@@ -39,13 +39,22 @@ if witness
   puts "SAT in #{elapsed}s: #{depth} complete coronas exist (#{copies} copies). Heesch >= #{depth}."
   puts "Witness (verified): #{directory}/corona#{depth}.json"
 else
+  require "digest"
   record.merge!(
     verdict: "non_tiler",
     tiles_rotations_only: false,
     tiles_with_reflections: false,
-    certificate: { type: "heesch", heesch: depth - 1, refutation: "cnf/corona#{depth}.drat" },
+    certificate: {
+      type: "heesch",
+      heesch: depth - 1,
+      adjacency: "26",
+      refutation: "cnf/corona#{depth}.drat",
+      refutation_sha256: Digest::SHA256.file(proof_path).hexdigest,
+      solved_with: "kissat #{`kissat --version`.strip}"
+    },
     heesch: depth - 1,
     budgets: record[:budgets].merge(corona_depth: depth),
+    reached: (record[:reached] || {}).merge(corona_refuted: depth),
     credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION}")
   )
   File.write(path, Census::JSONDocument.generate(record))

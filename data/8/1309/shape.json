@@ -8,8 +8,9 @@
   "verdict": "non_tiler",
   "tiles_rotations_only": false,
   "tiles_with_reflections": false,
-  "certificate": {"type":"heesch","heesch":1,"refutation":"cnf/corona2.drat"},
+  "certificate": {"type":"heesch","heesch":1,"refutation":"cnf/corona2.drat","adjacency":"26","refutation_sha256":"621091ca6f4695ee65ecf1d3fc7c205b35402330a1a78fd499fbb628a737dc1f","solved_with":"kissat (version unrecorded, 2026-07); corona-2 UNSAT reproduced by CaDiCaL; drat-trim VERIFIED"},
   "heesch": 1,
-  "budgets": {"box_max_volume":128,"torus_max_index":152,"corona_depth":2},
-  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":"Shane Becker via drat-trim (s VERIFIED) and CaDiCaL, 2026-07-07","prior_art":null}
+  "budgets": {"box_max_volume":128,"corona_depth":2,"torus_max_index":152},
+  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":"Shane Becker via drat-trim (s VERIFIED) and CaDiCaL, 2026-07-07","prior_art":null},
+  "reached": {"corona_refuted":2}
 }

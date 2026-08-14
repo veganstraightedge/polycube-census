@@ -59,10 +59,14 @@ propagated = 0
         certificate: {
           type: "heesch",
           heesch: twin_record[:heesch],
-          refutation: "mirror of #{twin_record[:id]} — data/#{twin_record[:id]}/#{twin_record.dig(:certificate, :refutation)}"
+          adjacency: twin_record.dig(:certificate, :adjacency) || "26",
+          refutation: "mirror of #{twin_record[:id]} — data/#{twin_record[:id]}/#{twin_record.dig(:certificate, :refutation)}",
+          refutation_sha256: twin_record.dig(:certificate, :refutation_sha256),
+          solved_with: "witnesses and verdict mirrored from #{twin_record[:id]}"
         },
         heesch: twin_record[:heesch],
         budgets: twin_record[:budgets],
+        reached: twin_record[:reached],
         credits: record[:credits].merge(solved_by: "polycube-census v#{Census::VERSION} (mirrored from #{twin_record[:id]})")
       )
       File.write(path, Census::JSONDocument.generate(stamped))
