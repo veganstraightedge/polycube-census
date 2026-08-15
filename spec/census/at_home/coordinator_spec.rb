@@ -69,12 +69,12 @@ RSpec.describe Census::AtHome::Coordinator, :home do
   end
 
   it "credits an unapproved display name as the opaque handle" do
-    worker = coordinator.register(handle: "worker-abc123", display_name: "Booger Butt")
-    expect(store.credit_string(worker[:id])).to eq("worker-abc123")
+    worker = coordinator.register(handle: "client-abc123", display_name: "Booger Butt")
+    expect(store.credit_string(worker[:id])).to eq("client-abc123")
   end
 
   it "credits an approved display name once a human approves it" do
-    worker = coordinator.register(handle: "worker-abc123", display_name: "Ada Lovelace")
+    worker = coordinator.register(handle: "client-abc123", display_name: "Ada Lovelace")
     store.approve_display_name(worker[:id])
     expect(store.credit_string(worker[:id])).to eq("Ada Lovelace")
   end

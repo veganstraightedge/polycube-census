@@ -43,7 +43,7 @@ The tail of every census size is a handful of shapes no single worker can finish
 
 The reason to build this on day one rather than retrofit it: volunteer credit is the retention mechanic (your name on a shape in a public dataset, permanently, WHUTS-style), but free-form names invite abuse, and the record is citable and lives in git forever. Splitting the two means a name can be moderated, changed, or scrubbed years later without touching a single result or invalidating the ledger.
 
-    credit while pending:  "worker-laptop-1"
+    credit while pending:  "client-laptop-1"
     credit once approved:  "Shane"
 
 ## LOCKSS: the database is not the archive
@@ -59,7 +59,7 @@ Scheduling is deliberately external — cron, a systemd timer, Heroku Scheduler,
 
 ## Security posture
 
-Generic web risks live at the HTTP edge: Sinatra on Puma (not WEBrick), `Rack::Attack` throttling, a 5 MB body cap, JSON shape validation, and pooled Postgres connections. Every query is parameterized; no worker-supplied value is ever interpolated into SQL. TLS and crude flood protection belong at a reverse proxy.
+Generic web risks live at the HTTP edge: Sinatra on Puma (not WEBrick), `Rack::Attack` throttling, a 5 MB body cap, JSON shape validation, and pooled Postgres connections. Every query is parameterized; no client-supplied value is ever interpolated into SQL. TLS and crude flood protection belong at a reverse proxy.
 
 Domain risks are handled where the domain lives, because no framework knows what a plausible tiling certificate looks like: `SubmissionGuard` bounds placement counts and coordinate ranges _before_ the geometry verifier is allowed to spend CPU on a stranger's submission.
 

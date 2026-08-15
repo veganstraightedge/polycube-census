@@ -1,13 +1,27 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# A polycubing@home volunteer client. Usage:
-#   script/at_home/client --name laptop [--give-up-after SECONDS] [--url http://host:9292] [--limit N] [--once]
+# A polycubing@home volunteer client. Every option has a default, so the
+# whole thing is: script/at_home/client
+#
+#   --url URL              coordinator address    (default $POLYCUBE_AT_HOME
+#                                                  or http://127.0.0.1:9292)
+#   --handle HANDLE        permanent scheduling id, opaque and never
+#                          displayed  (default client-<hostname>-<pid>)
+#   --name NAME            display name for credits — subject to approval
+#                          before it appears in data/  (default: none, and
+#                          credit falls back to the handle)
+#   --contact CONTACT      how to reach you, if you want to be reachable
+#   --limit N              stop after N units          (default: no limit)
+#   --once                 stop when the queue is empty rather than waiting
+#   --give-up-after SECS   stop if the coordinator stays unreachable this
+#                          long  (default: wait indefinitely)
 #
 # Holds no census state: leases a unit, solves it locally, returns the answer.
 # Everything it returns is re-verified by the coordinator.
 
 require_relative "../../lib/census"
+require "socket"
 
 arguments = ARGV.dup
 
@@ -25,8 +39,7 @@ def flag?(arguments, flag)
   true
 end
 
-require "socket"
-handle = option(arguments, "--handle", "worker-#{Socket.gethostname}-#{Process.pid}")
+handle = option(arguments, "--handle", "client-#{Socket.gethostname}-#{Process.pid}")
 display_name = option(arguments, "--name", nil)
 url = option(arguments, "--url", ENV.fetch("POLYCUBE_AT_HOME", "http://127.0.0.1:9292"))
 contact = option(arguments, "--contact", nil)
@@ -39,7 +52,9 @@ client = Census::AtHome::Client.new(url:, handle:, display_name:, contact:, give
 tally = begin
   client.run(limit:, once:)
 rescue Interrupt
-  puts "\nstopped by request"
+  puts
+  puts "stopped by request"
   {}
 end
 puts "done: #{tally.sort.to_h.inspect}"
+puts

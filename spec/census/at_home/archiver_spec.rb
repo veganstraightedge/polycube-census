@@ -38,16 +38,16 @@ RSpec.describe Census::AtHome::Archiver, :home do
 
   it "credits the opaque handle when a display name is not approved" do
     Dir.mktmpdir do |root|
-      solved_unit(root, handle: "worker-7f3a", display_name: "unapproved name")
+      solved_unit(root, handle: "client-7f3a", display_name: "unapproved name")
       described_class.new(store:, root:).promote
       record = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
-      expect(record.dig(:credits, :solved_by)).to include("worker-7f3a")
+      expect(record.dig(:credits, :solved_by)).to include("client-7f3a")
     end
   end
 
   it "credits an approved display name" do
     Dir.mktmpdir do |root|
-      worker = solved_unit(root, handle: "worker-7f3a", display_name: "Ada Lovelace")
+      worker = solved_unit(root, handle: "client-7f3a", display_name: "Ada Lovelace")
       store.approve_display_name(worker[:id])
       described_class.new(store:, root:).promote
       record = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
