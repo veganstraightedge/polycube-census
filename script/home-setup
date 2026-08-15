@@ -6,12 +6,16 @@
 
 require_relative "../lib/census"
 
+schema = File.expand_path("../db/home.sql", __dir__)
 url = ENV.fetch("POLYCUBE_HOME_URL", "postgres:///polycube_home")
-database = url.split("/").last
-system("createdb", database, err: File::NULL)
 
-store = Census::Home::Store.new(url:)
-store.load_schema(File.expand_path("../db/home.sql", __dir__))
-store.reset if ARGV.include?("--reset")
-puts "coordinator database ready: #{url}"
-puts store.status.inspect
+# The test database exists so `script/test` can truncate freely without
+# touching a live queue; keep both in step.
+[url, "postgres:///polycube_home_test"].uniq.each do |database_url|
+  system("createdb", database_url.split("/").last, err: File::NULL)
+  store = Census::Home::Store.new(url: database_url)
+  store.load_schema(schema)
+  store.reset if ARGV.include?("--reset") && database_url == url
+  puts "ready: #{database_url}  #{store.status[:units].inspect}"
+  store.close
+end

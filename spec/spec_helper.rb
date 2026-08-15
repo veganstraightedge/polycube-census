@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# The @home specs truncate what they touch, so they get their own database —
+# running the suite must never disturb a live coordinator's queue.
+ENV["POLYCUBE_HOME_URL"] ||= "postgres:///polycube_home_test"
+
 require_relative "../lib/census"
 
 RSpec.configure do |config|

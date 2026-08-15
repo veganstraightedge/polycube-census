@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Compare what volunteers returned against what the census already knows.
+# Every accepted result is re-verified here a second time, independently of
+# the coordinator, and its verdict is checked against data/. Usage:
+#
+#   script/home-audit
+
+require_relative "../lib/census"
+require "pg"
+
+url = ENV.fetch("POLYCUBE_HOME_URL", "postgres:///polycube_home")
+connection = PG.connect(url)
+root = File.expand_path("../data", __dir__)
+
+rows = connection.exec(<<~SQL)
+  SELECT u.shape_id, r.verdict, r.payload, w.name
+  FROM results r JOIN units u ON u.id = r.unit_id JOIN workers w ON w.id = r.worker_id
+  WHERE r.verified IS TRUE
+  ORDER BY u.shape_id
+SQL
+
+agreements = Hash.new(0)
+failures = []
+
+rows.each do |row|
+  record = JSON.parse(File.read(File.join(root, "#{row['shape_id']}/shape.json")), symbolize_names: true)
+  shape = Census::Polycube.new(cells: record[:cells])
+  payload = JSON.parse(row["payload"], symbolize_names: true)
+
+  case row["verdict"]
+  when "tiler"
+    valid = Census::Verifier.new(certificate: payload[:certificate], shape:).valid?
+    failures << "#{row['shape_id']}: certificate does not verify" unless valid
+    failures << "#{row['shape_id']}: census says #{record[:verdict]}, volunteer says tiler" unless record[:verdict] == "tiler"
+    agreements[:tiler_confirmed] += 1 if valid && record[:verdict] == "tiler"
+    same = payload.dig(:certificate, :type) == record.dig(:certificate, :type)
+    agreements[same ? :same_certificate_type : :different_certificate_type] += 1
+  when "exhausted"
+    failures << "#{row['shape_id']}: census has a certificate, volunteer exhausted" if record[:certificate]
+    agreements[:exhausted_confirmed] += 1 unless record[:certificate]
+  end
+end
+
+puts "audited #{rows.count} accepted results from #{rows.map { it['name'] }.uniq.size} workers"
+agreements.sort.each { |key, count| puts "  #{key}: #{count}" }
+if failures.empty?
+  puts "no disagreements with data/"
+else
+  puts "DISAGREEMENTS:"
+  failures.each { puts "  #{it}" }
+  exit 1
+end
