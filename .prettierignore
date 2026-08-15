@@ -1,0 +1,4 @@
+# The census archive is generated, never hand-authored. Prettier wraps JSON at
+# 80 columns and would reformat all 56,463 records on the first save, producing
+# a diff the size of the archive. script/canonicalize owns their formatting.
+data/

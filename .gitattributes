@@ -1,0 +1,8 @@
+# The census archive is generated, never hand-authored. Marking it keeps GitHub
+# from counting it in language statistics and collapses it in diff views.
+data/** linguist-generated=true
+
+# Line endings are pinned so a volunteer on Windows checks these out byte for
+# byte identical to everyone else. Without this, git would hand them CRLF and
+# every record they archived back would differ by line ending alone.
+data/** text eol=lf
