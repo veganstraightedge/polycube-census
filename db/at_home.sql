@@ -13,16 +13,16 @@
 -- `display_name` is what appears in credits.solved_by: mutable, moderated,
 -- scrubbable years later without touching a single result.
 CREATE TABLE IF NOT EXISTS clients (
-  id           BIGSERIAL PRIMARY KEY,
-  handle       TEXT NOT NULL UNIQUE,
-  display_name TEXT,
+  id            BIGSERIAL PRIMARY KEY,
+  handle        TEXT NOT NULL UNIQUE,
+  display_name  TEXT,
   display_state TEXT NOT NULL DEFAULT 'pending'
-                 CHECK (display_state IN ('pending', 'approved', 'rejected')),
-  contact      TEXT,
-  first_seen   TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_seen    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  accepted     INTEGER NOT NULL DEFAULT 0,
-  rejected     INTEGER NOT NULL DEFAULT 0
+                     CHECK (display_state IN ('pending', 'approved', 'rejected')),
+  contact       TEXT,
+  first_seen    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  last_seen     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  accepted      INTEGER NOT NULL DEFAULT 0,
+  rejected      INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS units (
@@ -32,11 +32,12 @@ CREATE TABLE IF NOT EXISTS units (
   parent_id    BIGINT REFERENCES units (id),
   payload      JSONB NOT NULL,
   status       TEXT NOT NULL DEFAULT 'pending'
-                 CHECK (status IN ('pending', 'leased', 'done', 'exhausted', 'split')),
+                    CHECK (status IN ('pending', 'leased', 'done', 'exhausted', 'split')),
   lease_client BIGINT REFERENCES clients (id),
   lease_until  TIMESTAMPTZ,
   attempts     INTEGER NOT NULL DEFAULT 0,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+
   UNIQUE (kind, shape_id, parent_id, payload)
 );
 
@@ -44,16 +45,16 @@ CREATE INDEX IF NOT EXISTS units_leasable ON units (status, lease_until);
 CREATE INDEX IF NOT EXISTS units_shape ON units (shape_id);
 
 CREATE TABLE IF NOT EXISTS results (
-  id           BIGSERIAL PRIMARY KEY,
-  unit_id      BIGINT NOT NULL REFERENCES units (id),
-  client_id    BIGINT NOT NULL REFERENCES clients (id),
-  verdict      TEXT NOT NULL
-                 CHECK (verdict IN ('tiler', 'exhausted', 'unsat', 'sat', 'error')),
-  payload      JSONB NOT NULL DEFAULT '{}'::jsonb,
-  seconds      NUMERIC,
-  verified     BOOLEAN,
+  id            BIGSERIAL PRIMARY KEY,
+  unit_id       BIGINT NOT NULL REFERENCES units (id),
+  client_id     BIGINT NOT NULL REFERENCES clients (id),
+  verdict       TEXT NOT NULL
+                     CHECK (verdict IN ('tiler', 'exhausted', 'unsat', 'sat', 'error')),
+  payload       JSONB NOT NULL DEFAULT '{}'::jsonb,
+  seconds       NUMERIC,
+  verified      BOOLEAN,
   verifier_note TEXT,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS results_unit ON results (unit_id);
