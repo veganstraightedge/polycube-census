@@ -22,24 +22,41 @@ module Census
     # where the content is a single long string, since JSON cannot wrap those.
     WIDTH = 100
 
+    # Raised when formatting would change a record. Nothing should ever be able
+    # to trigger it, which is the point: it fires only if this class has a bug.
+    class ContentChanged < StandardError; end
+
     def initialize(hash)
       @hash = hash
     end
 
     def generate
-      pairs = hash.map { |key, value| pair_of(key, value, indent: INDENT) }
+      pairs    = hash.map { |key, value| pair_of(key, value, indent: INDENT) }
+      document = "{\n#{pairs.map { "#{" " * INDENT}#{it}" }.join(",\n")}\n}\n"
 
-      "{\n#{pairs.map { "#{" " * INDENT}#{it}" }.join(",\n")}\n}\n"
+      verified(document)
     end
 
     private
 
     attr_reader :hash
 
+    # Formatting must never change a record. Every writer goes through here,
+    # including the four scripts the suite does not cover, so the check lives
+    # where none of them can route around it.
+    def verified(document)
+      return document if JSON.parse(document) == JSON.parse(JSON.generate(hash))
+
+      raise ContentChanged, "formatting changed #{hash[:id] || "the record"}"
+    rescue JSON::ParserError => error
+      raise ContentChanged, "formatting produced invalid JSON for #{hash[:id] || "the record"}: #{error.message}"
+    end
+
     # A key and its value, plus the column its value starts in, so the value can
-    # tell whether it fits on the rest of the line.
+    # tell whether it fits on the rest of the line. Escaping the key is the
+    # stdlib's job, since a key holding a quote would otherwise end the string.
     def pair_of(key, value, indent:)
-      label = %("#{key}": )
+      label = "#{JSON.generate(key.to_s)}: "
 
       "#{label}#{render(value, indent:, used: indent + label.length)}"
     end

@@ -83,6 +83,22 @@ RSpec.describe Census::JSONDocument do
     expect(generate(certificate: { refutation: prose })).to include(%("refutation": "#{prose}"))
   end
 
+  it "escapes keys rather than interpolating them" do
+    expect(generate(%q(has"quote) => 1)).to include(%q("has\"quote": 1))
+  end
+
+  # The backstop for the writers the suite does not cover: four scripts under
+  # script/ call this and are never exercised by a test.
+  it "refuses to return a document that does not parse back to the record" do
+    broken = Class.new(described_class) do
+      private
+
+      def render(_value, indent:, used:) = "0"
+    end
+
+    expect { broken.new(id: "5/1").generate }.to raise_error(described_class::ContentChanged, /formatting changed 5\/1/)
+  end
+
   # The whole point: the same content from two writers becomes the same file.
   it "generates identical output regardless of the order a writer built it in" do
     pipeline_order = { certificate: { type: "box", box: [1, 1, 5] } }

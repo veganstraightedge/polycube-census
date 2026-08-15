@@ -164,6 +164,8 @@ script/verify     # independently recheck every stored certificate
 script/gallery    # emit STLs and renders
 ```
 
+- **TODO: bring RuboCop back.** It was dropped early on and style passes have been manual since, checked against the suite and the generated output. That worked when the codebase was small. It now spans `lib/`, a dozen scripts, and the @home server and client, which is past the point where reading every file catches drift. Pin a config, run `rubocop -A` over the whole codebase once as its own commit, wire it into `script/test` and `script/cibuild`, and fix `script/test`'s header, which already claims to run a linter that isn't installed.
+
 ## Milestones
 
 - **M1 — Scaffold + enumerator.** Repo, canonical forms, enumeration through n=8, counts match A000162/A038119. Acceptance: `script/enumerate 8` reproduces OEIS.
