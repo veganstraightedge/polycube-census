@@ -35,7 +35,7 @@ module Census
             next
           end
 
-          File.write(path, JSONDocument.generate(stamped(record, certificate, result)))
+          File.write(path, JSONDocument.new(stamped(record, certificate, result)).generate)
           report&.call("#{result[:shape_id]}  tiler  #{certificate[:type]}  (credit: #{result[:credit]})")
           written << result[:shape_id]
         end
