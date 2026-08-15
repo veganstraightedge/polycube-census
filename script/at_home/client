@@ -34,9 +34,7 @@ def option arguments, flag, default
   position = arguments.index flag
   return default if position.nil?
 
-  _flag, value = arguments.slice! position, 2
-
-  value
+  arguments.slice!(position, 2).last
 end
 
 def flag? arguments, flag
