@@ -18,5 +18,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Benjamin Grant", "source": "https://whuts.org/unfolding/137", "verifiers": ["Stephen Brown", "zoey pridan", "Eddie Heyne"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Benjamin Grant",
+      "source": "https://whuts.org/unfolding/137",
+      "verifiers": ["Stephen Brown", "zoey pridan", "Eddie Heyne"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

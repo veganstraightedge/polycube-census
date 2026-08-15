@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Wilmer Lundell", "source": "https://whuts.org/unfolding/196", "verifiers": ["r10pez10", "Caleb Lehman", "Pavel Rozhkov"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Wilmer Lundell",
+      "source": "https://whuts.org/unfolding/196",
+      "verifiers": ["r10pez10", "Caleb Lehman", "Pavel Rozhkov"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

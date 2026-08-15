@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Luke Stenger", "source": "https://whuts.org/unfolding/224", "verifiers": ["Jordyn Hyde", "Michael MacDonald", "Roman Berens"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Luke Stenger",
+      "source": "https://whuts.org/unfolding/224",
+      "verifiers": ["Jordyn Hyde", "Michael MacDonald", "Roman Berens"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

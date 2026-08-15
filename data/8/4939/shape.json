@@ -18,5 +18,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Anhadvir Singh", "source": "https://whuts.org/unfolding/59", "verifiers": ["Jason Wang", "Reed Pratt", "Zakir"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Anhadvir Singh",
+      "source": "https://whuts.org/unfolding/59",
+      "verifiers": ["Jason Wang", "Reed Pratt", "Zakir"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

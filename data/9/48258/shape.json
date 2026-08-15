@@ -8,7 +8,14 @@
   "verdict": "non_tiler",
   "tiles_rotations_only": false,
   "tiles_with_reflections": false,
-  "certificate": { "adjacency": "26", "heesch": 1, "refutation": "cnf/corona2.drat", "refutation_sha256": "65dc6a556a659fd908f380ed4e366bae589c1e97a4c7c43bb69bcf80f44bb380", "solved_with": "kissat 4.0.4; drat-trim VERIFIED (trimmed core)", "type": "heesch" },
+  "certificate": {
+    "adjacency": "26",
+    "heesch": 1,
+    "refutation": "cnf/corona2.drat",
+    "refutation_sha256": "65dc6a556a659fd908f380ed4e366bae589c1e97a4c7c43bb69bcf80f44bb380",
+    "solved_with": "kissat 4.0.4; drat-trim VERIFIED (trimmed core)",
+    "type": "heesch"
+  },
   "heesch": 1,
   "budgets": { "box_max_volume": 96, "corona_depth": 2, "torus_max_index": 72 },
   "credits": { "prior_art": null, "solved_by": "polycube-census v0.1.0", "verified_by": null },

@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Itamar Levy", "source": "https://whuts.org/unfolding/152", "verifiers": ["Oke Petersen", "John Lewis", "Sven Neumann"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Itamar Levy",
+      "source": "https://whuts.org/unfolding/152",
+      "verifiers": ["Oke Petersen", "John Lewis", "Sven Neumann"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

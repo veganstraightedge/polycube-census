@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Sid Miller", "source": "https://whuts.org/unfolding/198", "verifiers": ["Jonas Jahnel", "Henrique Campos Navas", "Kenneth Harold Johnson"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Sid Miller",
+      "source": "https://whuts.org/unfolding/198",
+      "verifiers": ["Jonas Jahnel", "Henrique Campos Navas", "Kenneth Harold Johnson"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

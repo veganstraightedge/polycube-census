@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "August Asp (Spu7Nix)", "source": "https://whuts.org/unfolding/186", "verifiers": ["r10pez10", "Alexander Liddington", "Adrien"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "August Asp (Spu7Nix)",
+      "source": "https://whuts.org/unfolding/186",
+      "verifiers": ["r10pez10", "Alexander Liddington", "Adrien"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

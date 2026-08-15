@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Steven Schroeder", "source": "https://whuts.org/unfolding/8", "verifiers": ["John Lewis", "Nick Hollett", "T-Jay_HD"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Steven Schroeder",
+      "source": "https://whuts.org/unfolding/8",
+      "verifiers": ["John Lewis", "Nick Hollett", "T-Jay_HD"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

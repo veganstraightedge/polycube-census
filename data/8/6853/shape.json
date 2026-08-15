@@ -18,5 +18,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Jesse Vermeire", "source": "https://whuts.org/unfolding/149", "verifiers": ["Johannes Ebner", "Todd Spillers Jr", "Máté Pszota"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Jesse Vermeire",
+      "source": "https://whuts.org/unfolding/149",
+      "verifiers": ["Johannes Ebner", "Todd Spillers Jr", "Máté Pszota"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

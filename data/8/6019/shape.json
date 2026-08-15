@@ -18,5 +18,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Jay McArthur", "source": "https://whuts.org/unfolding/205", "verifiers": ["Gabriel Leo Denney-Martell", "Maxim Brückmann", "Seth Harwood"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Jay McArthur",
+      "source": "https://whuts.org/unfolding/205",
+      "verifiers": ["Gabriel Leo Denney-Martell", "Maxim Brückmann", "Seth Harwood"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

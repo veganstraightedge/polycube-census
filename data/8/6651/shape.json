@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Jim Andress", "source": "https://whuts.org/unfolding/244", "verifiers": ["Mark Basham", "Pegenau", "Mariusz"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Jim Andress",
+      "source": "https://whuts.org/unfolding/244",
+      "verifiers": ["Mark Basham", "Pegenau", "Mariusz"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

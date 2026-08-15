@@ -17,5 +17,13 @@
   },
   "heesch": null,
   "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
-  "credits": { "prior_art": { "solver": "Sébastien Chagnon", "source": "https://whuts.org/unfolding/142", "verifiers": ["Alban VACHETTE", "Marcos Petri", "Brady Hasse"] }, "solved_by": "polycube-census v0.1.0", "verified_by": null }
+  "credits": {
+    "prior_art": {
+      "solver": "Sébastien Chagnon",
+      "source": "https://whuts.org/unfolding/142",
+      "verifiers": ["Alban VACHETTE", "Marcos Petri", "Brady Hasse"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }
