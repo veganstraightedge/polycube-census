@@ -24,6 +24,10 @@ module Census
       ].freeze
       RETRY_DELAYS = [1, 2, 5, 10, 20, 30, 60].freeze
 
+      # Responses meaning "not now" rather than "you asked wrongly".
+      TOO_MANY_REQUESTS = 429
+      SERVER_ERROR_FLOOR = 500
+
       def initialize(url:, handle:, display_name: nil, contact: nil, report: nil, give_up_after: nil)
         @base = URI(url)
         @handle = handle
@@ -136,9 +140,10 @@ module Census
         request.body = JSON.generate(body)
         response = Net::HTTP.start(base.host, base.port, read_timeout: 300, open_timeout: 30) { it.request(request) }
 
-        # 429 and 5xx mean "not now"; 4xx means we asked wrongly and repeating
-        # it would just be rude.
-        raise TransientResponse, "HTTP #{response.code}" if response.code.to_i == 429 || response.code.to_i >= 500
+        # Throttling and server errors mean "not now"; other 4xx means we
+        # asked wrongly and repeating it would just be rude.
+        status = response.code.to_i
+        raise TransientResponse, "HTTP #{status}" if status == TOO_MANY_REQUESTS || status >= SERVER_ERROR_FLOOR
 
         JSON.parse(response.body, symbolize_names: true)
       end

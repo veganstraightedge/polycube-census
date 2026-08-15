@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Rack entry point for the polycubing@home coordinator.
+# Rack entry point for the polycubing@home server.
 #
 #   bundle exec puma -C config/puma.rb
 #   # or:

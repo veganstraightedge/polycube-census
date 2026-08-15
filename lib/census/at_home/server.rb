@@ -42,6 +42,18 @@ module Census
     class Server < Sinatra::Base
       MAX_BODY_BYTES = 5 * 1024 * 1024
 
+      # Responses this API can give. Named so the reader never has to
+      # remember which number means what.
+      BAD_REQUEST = 400
+      PAYLOAD_TOO_LARGE = 413
+      TOO_MANY_REQUESTS = 429
+
+      # Generous enough that a client leasing, solving, and submitting in a
+      # tight loop never trips it; tight enough that a runaway or a flood
+      # gets slowed down.
+      REQUESTS_PER_PERIOD = 120
+      THROTTLE_PERIOD_SECONDS = 60
+
       class << self
         attr_accessor :coordinator
       end
@@ -65,14 +77,20 @@ module Census
       # store. Put Redis here (or rate-limit at the proxy) if it ever scales
       # to more than one process.
       Rack::Attack.cache.store = MemoryStore.new
-      Rack::Attack.throttle("requests by ip", limit: 120, period: 60) { it.ip }
-      Rack::Attack.throttled_responder = lambda do |_request|
-        [429, { "Content-Type" => "application/json" }, [%({"error":"slow down"}\n)]]
+      Rack::Attack.throttle("requests by ip", limit: REQUESTS_PER_PERIOD, period: THROTTLE_PERIOD_SECONDS) { it.ip }
+      Rack::Attack.throttled_responder = lambda do |request|
+        # Abuse is an operational event with no home in the database, so it
+        # goes to the log where an operator can see it.
+        warn <<~THROTTLED
+          #{Time.now.utc.iso8601} THROTTLED #{request.ip} #{request.request_method} #{request.path}
+        THROTTLED
+
+        [TOO_MANY_REQUESTS, { "Content-Type" => "application/json" }, [%({"error":"slow down"}\n)]]
       end
 
       before do
         content_type :json
-        halt(413, json(error: "payload too large")) if request.content_length.to_i > MAX_BODY_BYTES
+        halt(PAYLOAD_TOO_LARGE, json(error: "payload too large")) if request.content_length.to_i > MAX_BODY_BYTES
       end
 
       post "/register" do
@@ -100,9 +118,20 @@ module Census
         json(coordinator.status)
       end
 
+      # Domain events (who submitted what, what verified, who was rejected)
+      # live in the database, where they are queryable. Crashes do not, so
+      # they go to the log — otherwise a bug or a database outage would
+      # reach a volunteer as a bare 400 and reach us as nothing at all.
       error do
-        status 400
-        json(error: env["sinatra.error"].message)
+        exception = env["sinatra.error"]
+        warn <<~ERROR
+          #{Time.now.utc.iso8601} ERROR #{request.request_method} #{request.path}
+            #{exception.class}: #{exception.message}
+            #{exception.backtrace&.first(5)&.join("\n    ")}
+        ERROR
+
+        status BAD_REQUEST
+        json(error: exception.message)
       end
 
       private
@@ -111,7 +140,7 @@ module Census
 
       def parse_body
         raw = request.body.read(MAX_BODY_BYTES + 1).to_s
-        halt(413, json(error: "payload too large")) if raw.bytesize > MAX_BODY_BYTES
+        halt(PAYLOAD_TOO_LARGE, json(error: "payload too large")) if raw.bytesize > MAX_BODY_BYTES
         return {} if raw.empty?
 
         parsed = JSON.parse(raw, symbolize_names: true)

@@ -34,6 +34,14 @@ RSpec.describe Census::AtHome::Server, :home do
     expect(body.dig(:client, :handle)).to eq("spec-client")
   end
 
+  it "logs the exception behind a 400 so a crash is never silent" do
+    logged = nil
+    allow_any_instance_of(described_class).to receive(:warn) { |_instance, message| logged = message }
+
+    post_json("/register", {})
+    expect(logged).to include("ERROR", "/register", "missing handle")
+  end
+
   it "refuses a request missing a required field" do
     body = post_json("/register", {})
     expect(last_response.status).to eq(400)

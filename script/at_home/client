@@ -1,9 +1,13 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# A polycubing@home volunteer client.
-# Every option has a default, so the whole thing is:
+# A polycubing@home volunteer client
+# Usage:
+#
 #   script/at_home/client
+#
+# Options.
+# Each has a default, so all are optional.
 #
 #   --url URL                 coordinator address
 #                               default:  $POLYCUBE_AT_HOME
@@ -15,6 +19,7 @@
 #                               default: none
 #                               and credit falls back to the handle
 #   --contact CONTACT_INFO    how to reach you, if you want to be reachable
+#                               default: none
 #   --limit N                 stop after N units
 #                               default: no limit
 #   --give-up-after SECONDS   stop if the coordinator stays unreachable this long
@@ -22,12 +27,22 @@
 #   --once                    stop when the queue is empty rather than waiting
 #
 # The client holds no census state.
-# It leases a unit, solves it locally, returns the answer.
-# Everything it returns is re-verified by the coordinator.
+# It leases a unit, solves it locally, then returns the answer to the server.
+# Everything it returns is re-verified by the server.
+#
+# Examples:
+#
+#   script/at_home/client
+#   script/at_home/client --url https://example.com
+#   script/at_home/client --url https://example.com --name sbb
+#   script/at_home/client --url https://example.com --contact veganstraightedge@gmail.com
+#   script/at_home/client --limit 10
+#   script/at_home/client --once
 
-require_relative "../../lib/census"
-require "socket"
+require 'socket'
+require_relative '../../lib/census'
 
+# Read options
 arguments = ARGV.dup
 
 def option arguments, flag, default
@@ -46,29 +61,41 @@ def flag? arguments, flag
   true
 end
 
-def default_handle = "client-#{Socket.gethostname}-#{Process.pid}"
-def default_url    = ENV.fetch "POLYCUBE_AT_HOME", "http://127.0.0.1:9292"
+def check_for_unknown_options arguments
+  return if arguments.empty?
 
-url           = option arguments, "--url",           default_url
-handle        = option arguments, "--handle",        default_handle
-display_name  = option arguments, "--name",          nil
-contact       = option arguments, "--contact",       nil
-limit         = option(arguments, "--limit",         nil)&.then { Integer(it) }
-give_up_after = option(arguments, "--give-up-after", nil)&.then { Integer(it) }
-once          = flag?  arguments, "--once"
+  abort "unknown option(s): #{arguments.join(' ')}"
+end
+
+def default_url    = ENV.fetch 'POLYCUBE_AT_HOME', 'http://127.0.0.1:9292'
+def default_handle = "client-#{Socket.gethostname}-#{Process.pid}"
+def reporter       = ->(line) { puts "#{Time.now.utc.iso8601}  #{line}" }
+
+# Extract options
+url            = option arguments, '--url',           default_url
+handle         = option arguments, '--handle',        default_handle
+display_name   = option arguments, '--name',          nil
+contact        = option arguments, '--contact',       nil
+limit          = option(arguments, '--limit',         nil)&.then { Integer(it) }
+give_up_after  = option(arguments, '--give-up-after', nil)&.then { Integer(it) }
+once           = flag?  arguments, '--once'
+
+# Check options
+check_for_unknown_options arguments
 
 client = Census::AtHome::Client.new url:,
                                     handle:,
                                     display_name:,
                                     contact:,
                                     give_up_after:,
-                                    report: ->(line) { puts "#{Time.now.utc.iso8601}  #{line}" }
+                                    report: reporter
 
 tally = begin
   client.run limit:, once:
 rescue Interrupt
   puts
-  puts "stopped by user request (control-c)"
+  puts 'stopped by user request (control-c)'
+  puts
   {}
 end
 

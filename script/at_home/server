@@ -1,26 +1,54 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Boot the polycubing@home coordinator.
+# The polycubing@home coordinator server
+# Usage:
 #
-#   script/at_home/server [--port 9292] [--threads 16]
+#   script/at_home/server
 #
-# A thin wrapper over `puma -C config/puma.rb`, which loads config.ru — use
-# either; they are the same server. Database: $POLYCUBE_AT_HOME_URL,
-# default postgres:///polycube_at_home (create it with script/at_home/setup).
+# Options.
+# Each has a default, so all are optional.
+#
+#   --port PORT               port to listen on
+#                               default: $PORT
+#                               or:      9292
+#   --threads THREADS         number of threads to use
+#                               default: $AT_HOME_THREADS
+#                               or:      16
+#
+# A thin wrapper over `puma -C config/puma.rb`
+# Both this and `puma` load config.ru, so you may use either to start the server.
+#
+# Examples:
+#
+#   script/at_home/server
+#   script/at_home/server --port 5678
+#   script/at_home/server --threads 37
+#   PORT=5678 AT_HOME_THREADS=37 script/at_home/server
 
+# Read options
 arguments = ARGV.dup
 
-def option(arguments, flag, default)
-  return default unless (position = arguments.index(flag))
+def option arguments, flag, default
+  position = arguments.index flag
+  return default if position.nil?
 
-  arguments.delete_at(position)
-  arguments.delete_at(position)
+  arguments.slice!(position, 2).last
 end
 
-ENV["PORT"] = option(arguments, "--port", ENV.fetch("PORT", "9292"))
-ENV["AT_HOME_THREADS"] = option(arguments, "--threads", ENV.fetch("AT_HOME_THREADS", "16"))
+def check_for_unknown_options arguments
+  return if arguments.empty?
 
-Dir.chdir(File.expand_path("../..", __dir__)) do
-  exec("bundle", "exec", "puma", "-C", "config/puma.rb")
+  abort "unknown option(s): #{arguments.join(' ')}"
+end
+
+# Extract options
+ENV['PORT']            = option arguments, '--port',    ENV.fetch('PORT', '9292')
+ENV['AT_HOME_THREADS'] = option arguments, '--threads', ENV.fetch('AT_HOME_THREADS', '16')
+
+# Check options
+check_for_unknown_options arguments
+
+Dir.chdir File.expand_path('../..', __dir__) do
+  exec 'bundle', 'exec', 'puma', '-C', 'config/puma.rb'
 end

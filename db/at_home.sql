@@ -1,4 +1,4 @@
--- polycubing@home coordinator schema.
+-- polycubing@home coordinator server schema.
 --
 -- Two ideas carry the whole design:
 --   1. A unit is a question with a self-certifying answer. Positive answers
