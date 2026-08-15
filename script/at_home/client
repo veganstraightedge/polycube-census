@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 # A polycubing@home volunteer client. Usage:
-#   script/at_home/client --name laptop [--url http://host:9292] [--limit N] [--once]
+#   script/at_home/client --name laptop [--give-up-after SECONDS] [--url http://host:9292] [--limit N] [--once]
 #
 # Holds no census state: leases a unit, solves it locally, returns the answer.
 # Everything it returns is re-verified by the coordinator.
@@ -32,7 +32,14 @@ url = option(arguments, "--url", ENV.fetch("POLYCUBE_AT_HOME", "http://127.0.0.1
 contact = option(arguments, "--contact", nil)
 limit = option(arguments, "--limit", nil)&.then { Integer(it) }
 once = flag?(arguments, "--once")
+give_up_after = option(arguments, "--give-up-after", nil)&.then { Integer(it) }
 
-worker = Census::AtHome::Client.new(url:, handle:, display_name:, contact:, report: ->(line) { puts "#{Time.now.utc.iso8601}  #{line}" })
-tally = worker.run(limit:, once:)
+client = Census::AtHome::Client.new(url:, handle:, display_name:, contact:, give_up_after:,
+                                    report: ->(line) { puts "#{Time.now.utc.iso8601}  #{line}" })
+tally = begin
+  client.run(limit:, once:)
+rescue Interrupt
+  puts "\nstopped by request"
+  {}
+end
 puts "done: #{tally.sort.to_h.inspect}"
