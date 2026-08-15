@@ -160,6 +160,28 @@ module Census
         rows.map { it["proof_sha256"] }
       end
 
+      # Refutations whose proof is named but not held. These are the claims
+      # standing on a volunteer's word alone, so this is the list worth
+      # auditing from.
+      def claimed_proofs
+        rows = synchronize do |connection|
+          connection.exec(<<~SQL)
+            SELECT results.proof_sha256, results.proof_bytes, results.created_at,
+                   units.shape_id, clients.handle
+              FROM results
+                   JOIN units   ON units.id   = results.unit_id
+                   JOIN clients ON clients.id = results.client_id
+             WHERE results.proof_state = 'claimed'
+             ORDER BY results.created_at
+          SQL
+        end
+
+        rows.map do
+          { bytes: Integer(it["proof_bytes"]), claimed_at: it["created_at"], handle: it["handle"],
+            sha256: it["proof_sha256"], shape_id: it["shape_id"] }
+        end
+      end
+
       def want_proof(sha256)
         synchronize do |connection|
           connection.exec_params(<<~SQL, [sha256]).cmd_tuples

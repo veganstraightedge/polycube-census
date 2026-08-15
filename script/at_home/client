@@ -119,7 +119,7 @@ client = Census::AtHome::Client.new url:,
                                     report: reporter
 
 tally = begin
-  client.run limit:, once:
+  client.run(limit:, once:)
 rescue Interrupt
   puts
   puts 'stopped by user request (control-c)'
