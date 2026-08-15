@@ -6,7 +6,7 @@ In 2D this work has been done: exhaustive censuses classify every small polyomin
 
 ## Verdicts
 
-Every polycube through `n = 8` cells carries exactly one (the `n = 9` sweep is underway):
+Every polycube through `n = 9` cells — all 56,463 of them — carries exactly one:
 
 | Verdict     | Meaning                                   | Certificate                                        |
 | ----------- | ----------------------------------------- | -------------------------------------------------- |
@@ -20,9 +20,9 @@ Every polycube through `n = 8` cells carries exactly one (the `n = 9` sweep is u
 
 1. Do all 207 polycubes through `n = 6` tile space? (Folklore says yes, but folklore isn't proof.) **Answered: yes — all 207 carry verified certificates.**
 2. What is the smallest polycube that does not tile space? **Answered: [`8/1309`](data/8/1309/shape.json), the flat 3×3 square ring — the only non-simply-connected polycube through `n = 8`, and the unique non-tiler among all 8,152 shapes. Every polycube with 1–7 cells tiles space.**
-3. What are the first 3D Heesch numbers? (AFAICT, no table of them already exists anywhere.) **First entry recorded: the square ring has Heesch number 1 — it can be fully wrapped once (28 copies, verified witness) but never twice (corona-2 UNSAT, reproduced by two independent solvers, DRAT proof checked by drat-trim: `s VERIFIED`).**
+3. What are the first 3D Heesch numbers? (AFAICT, no table of them already exists anywhere.) **Answered, and the table has two rows.** Heesch 1: the square ring, wrapped once by 28 copies and provably never twice (drat-trim `s VERIFIED`), joined at `n = 9` by [`9/48258`](data/9/48258/shape.json) (the 5×5 Greek cross, also verified), the chiral pair [`9/8219`](data/9/8219/shape.json)/`9/8220`, and the chiral pair [`9/42947`](data/9/42947/shape.json)/`9/42969` (the triskelion — three perpendicular arms braided around a vacant corner, refuted by a 12,861-cube cube-and-conquer campaign). Heesch ≥ 2: **eight nonacubes wrap twice** — the first shapes ever known to do so in three dimensions, each with an independently verified two-layer witness (the largest: 370 copies).
 4. What is the smallest polycube that tiles only anisohedrally — never tile-transitively?
-5. Does anything through `n = 8` resist classification entirely? **Answered: no. The census through `n = 8` is complete — zero open shapes.**
+5. Does anything through `n = 9` resist classification entirely? **Every shape through `n = 9` now carries a verdict.** Eight of them are `OPEN` with documented budgets — shapes that wrap twice, admit no box through volume 128, and admit no periodic block through lattice index 72. One question remains genuinely unanswered: does [`9/2127`](data/9/2127/shape.json), the staircase, wrap a *third* time? Its corona-3 has resisted ~900 core-hours across six solvers and three cube-and-conquer campaigns.
 
 ## How it works
 
@@ -56,8 +56,8 @@ Indices are assigned once, by lexicographic order of canonical forms, and never 
 - [x] **M3 — Folklore certified.** All 207 shapes through `n = 6` carrying `TILER` certificates (16 of 29 pentacubes and 68 of 166 hexacubes tile a box within budget; the rest are periodic via skew lattices — many are translations-only lattice tiles).
 - [x] **M4 — The heptacube sweep.** All 1,023 heptacubes tile space (36 box, 987 skew-lattice) — so the smallest non-tiling polycube, if any exists through `n = 8`, has exactly 8 cells. A first divergence from 2D, where non-tilers already appear among the heptominoes.
 - [x] **M5 — N8.** Sweep: 6,921 of 6,922 octacubes tile (383 box, 6,538 skew-lattice), all certificates independently verified. The lone holdout, [`8/1309`](data/8/1309/shape.json) — the flat 3×3 square ring (the holey octomino) — is a certified **non-tiler with Heesch number 1**: its hole is an open channel that perpendicular rings can thread, and chainmail gets exactly one layer — corona-1 has a verified 28-copy witness, corona-2 is UNSAT (kissat and CaDiCaL agree; DRAT proof checked by drat-trim: `s VERIFIED`). The census through `n = 8` is complete: zero open shapes. WHUTS cross-check done — all 261 tesseract unfoldings imported with per-shape solver credits.
-- [ ] **N9 — sweep (underway).** All 48,311 nonacubes enumerated, counts matching OEIS exactly; 48,200 certified tilers (782 box, 47,418 skew-lattice), every certificate independently verified. 111 survivors — 60 mirror classes, none containing the ring as a subshape — now in raised-budget triage, with surround/corona next for whatever resists.
-- [ ] **M6 — Publish.** Browsable gallery.
+- [x] **N9 — the nonacube sweep.** All 48,311 nonacubes enumerated (OEIS-exact) and resolved: **48,298 certified tilers** (782 box, 47,516 skew-lattice), **5 certified non-tilers** (the Greek cross `9/48258`, and the chiral pairs `9/8219`/`9/8220` and `9/42947`/`9/42969`), and **8 `OPEN` shapes with verified Heesch ≥ 2 witnesses** — the first shapes known to wrap twice in three dimensions. Every certificate independently verified; the last holdouts fell to mirror propagation, corona SAT, and a cube-and-conquer campaign run across a borrowed 64-core server. Zero unresolved shapes.
+- [ ] **M6 — Publish.** Browsable gallery (meshes done for all 56,463 shapes — models, tilings, corona witnesses; the web viewer is what remains).
 - [ ] **M7 — Publish.** OEIS sequences.
 - [ ] **M8 — Publish.** Paper.
 
