@@ -3,15 +3,15 @@
 
 # The polycubing@home coordinator (Sinatra on Puma).
 #
-#   script/home-server [--port 9292] [--threads 16]
+#   script/home/server [--port 9292] [--threads 16]
 #
 # Database: $POLYCUBE_HOME_URL, default postgres:///polycube_home
-# Create it once with: script/home-setup
+# Create it once with: script/home/setup
 #
 # Deployment note: terminate TLS and apply crude flood protection at a
 # reverse proxy; this process handles application-level limits only.
 
-require_relative "../lib/census"
+require_relative "../../lib/census"
 require "puma"
 require "puma/configuration"
 require "puma/launcher"

@@ -4,9 +4,9 @@
 # LOCKSS pass: move verified results out of the coordinator database into
 # plaintext files under data/, then (optionally) commit and push them.
 #
-#   script/home-promote                 # write files only
-#   script/home-promote --commit        # write, then commit
-#   script/home-promote --commit --push # write, commit, push (pull-rebase first)
+#   script/home/promote                 # write files only
+#   script/home/promote --commit        # write, then commit
+#   script/home/promote --commit --push # write, commit, push (pull-rebase first)
 #
 # Safe to run on a schedule (cron, Heroku Scheduler, systemd timer) and safe
 # to interrupt: it compares the database against data/ each run rather than
@@ -17,11 +17,11 @@
 # the worker and the coordinator — so a compromised coordinator still cannot
 # put a false claim into the archive.
 
-require_relative "../lib/census"
+require_relative "../../lib/census"
 
 commit = ARGV.include?("--commit")
 push = ARGV.include?("--push")
-root = File.expand_path("../data", __dir__)
+root = File.expand_path("../../data", __dir__)
 
 store = Census::Home::Store.new
 promoter = Census::Home::Promoter.new(store:, root:, report: ->(line) { puts line })
@@ -36,7 +36,7 @@ end
 puts "promoted #{written.size} shape record(s)"
 exit unless commit
 
-Dir.chdir(File.expand_path("..", __dir__)) do
+Dir.chdir(File.expand_path("../..", __dir__)) do
   system("git", "add", "--", *written.map { "data/#{it}/shape.json" }, exception: true)
   message = "@home: #{written.size} verified certificate(s) promoted to data/"
   system("git", "commit", "-q", "-m", message, exception: true)

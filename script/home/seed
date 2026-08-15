@@ -3,15 +3,15 @@
 
 # Fill the coordinator's queue with shape units drawn from data/.
 #
-#   script/home-seed 5                    # every shape with n=5
-#   script/home-seed 5 --limit 10         # the first 10 of them
-#   script/home-seed 9 --unresolved       # only shapes still lacking a verdict
+#   script/home/seed 5                    # every shape with n=5
+#   script/home/seed 5 --limit 10         # the first 10 of them
+#   script/home/seed 9 --unresolved       # only shapes still lacking a verdict
 #
 # Seeding a solved size is the point during a shakedown: the coordinator
 # re-verifies whatever comes back, so the run is a end-to-end test against
 # answers we already trust.
 
-require_relative "../lib/census"
+require_relative "../../lib/census"
 
 arguments = ARGV.dup
 
@@ -32,7 +32,7 @@ end
 limit = option(arguments, "--limit", nil)&.then { Integer(it) }
 unresolved_only = flag?(arguments, "--unresolved")
 size = Integer(arguments.fetch(0))
-root = File.expand_path("../data", __dir__)
+root = File.expand_path("../../data", __dir__)
 
 paths = Dir.glob(File.join(root, size.to_s, "*", "shape.json"))
            .sort_by { Integer(File.basename(File.dirname(it))) }

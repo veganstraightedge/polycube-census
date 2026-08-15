@@ -16,19 +16,19 @@ Demonstrated: a worker submitting a forged certificate is rejected (`certificate
 | trust boundary | `lib/census/home/coordinator.rb` | leases units, verifies every submission, closes or requeues, credits the worker |
 | HTTP API | `lib/census/home/server.rb` | four endpoints, JSON, no framework: `/register`, `/lease`, `/results`, `/status` |
 | client | `lib/census/home/worker.rb` | leases, solves locally (box/torus for shapes, kissat for cubes), submits, repeats |
-| durability | `lib/census/home/promoter.rb`, `script/home-promote` | moves verified results out of Postgres into plaintext `data/` files, commits, pushes |
+| durability | `lib/census/home/promoter.rb`, `script/home/promote` | moves verified results out of Postgres into plaintext `data/` files, commits, pushes |
 
 Scripts: `home-setup` (create databases), `home-seed` (fill the queue from `data/`), `home-server`, `home-worker`, `home-audit` (compare accepted results against the census's own answers).
 
 ## Shakedown run
 
 ```sh
-script/home-setup --reset
-script/home-seed 5                 # 29 pentacubes
-script/home-server &
-script/home-worker --name alpha &
-script/home-worker --name beta &
-script/home-audit
+script/home/setup --reset
+script/home/seed 5                 # 29 pentacubes
+script/home/server &
+script/home/worker --name alpha &
+script/home/worker --name beta &
+script/home/audit
 ```
 
 Result: 29 units solved by two competing clients, every certificate verified on arrival, and the audit reporting `tiler_confirmed: 29, same_certificate_type: 29, no disagreements with data/` — the volunteers independently rediscovered exactly what the census already knew.
@@ -48,12 +48,12 @@ The reason to build this on day one rather than retrofit it: volunteer credit is
 
 ## LOCKSS: the database is not the archive
 
-Postgres holds scheduling state — leases, queues, worker profiles. It is deliberately _disposable_: if it dies we lose in-flight leases and nothing else, because `script/home-promote` has been moving every verified result into plaintext files under `data/` all along, where git (and S3, for the big pieces) keep the copies that matter. The dependency runs one way: the database is reconstructible from the archive (`script/home-seed`), the archive is not reconstructible from the database.
+Postgres holds scheduling state — leases, queues, worker profiles. It is deliberately _disposable_: if it dies we lose in-flight leases and nothing else, because `script/home/promote` has been moving every verified result into plaintext files under `data/` all along, where git (and S3, for the big pieces) keep the copies that matter. The dependency runs one way: the database is reconstructible from the archive (`script/home/seed`), the archive is not reconstructible from the database.
 
 The promoter is idempotent by comparison rather than bookkeeping — each run asks "what does the coordinator know that `data/` doesn't?" — so an interrupted run loses nothing and a repeated run writes nothing twice. It re-verifies every certificate before writing, the third independent check after the worker and the coordinator: a coordinator compromised _after_ accepting a result still cannot put a false claim into the archive (there is a spec for exactly that).
 
-    script/home-promote                  # write files
-    script/home-promote --commit --push  # write, commit, pull-rebase, push
+    script/home/promote                  # write files
+    script/home/promote --commit --push  # write, commit, pull-rebase, push
 
 Scheduling is deliberately external — cron, a systemd timer, Heroku Scheduler, or Sidekiq-cron if the coordinator ever becomes a Rails app. The script is the durable artifact; the trigger is a detail.
 

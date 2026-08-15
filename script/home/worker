@@ -2,12 +2,12 @@
 # frozen_string_literal: true
 
 # A polycubing@home volunteer client. Usage:
-#   script/home-worker --name laptop [--url http://host:9292] [--limit N] [--once]
+#   script/home/worker --name laptop [--url http://host:9292] [--limit N] [--once]
 #
 # Holds no census state: leases a unit, solves it locally, returns the answer.
 # Everything it returns is re-verified by the coordinator.
 
-require_relative "../lib/census"
+require_relative "../../lib/census"
 
 arguments = ARGV.dup
 

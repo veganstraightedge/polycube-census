@@ -23,7 +23,7 @@ RSpec.configure do |config|
   config.before(:each, :home) do
     Census::Home::Store.new.close
   rescue StandardError => error
-    skip "coordinator database unavailable (#{error.class}) — run script/home-setup"
+    skip "coordinator database unavailable (#{error.class}) — run script/home/setup"
   end
   config.order = :random
   Kernel.srand config.seed

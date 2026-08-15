@@ -5,14 +5,14 @@
 # Every accepted result is re-verified here a second time, independently of
 # the coordinator, and its verdict is checked against data/. Usage:
 #
-#   script/home-audit
+#   script/home/audit
 
-require_relative "../lib/census"
+require_relative "../../lib/census"
 require "pg"
 
 url = ENV.fetch("POLYCUBE_HOME_URL", "postgres:///polycube_home")
 connection = PG.connect(url)
-root = File.expand_path("../data", __dir__)
+root = File.expand_path("../../data", __dir__)
 
 rows = connection.exec(<<~SQL)
   SELECT u.shape_id, r.verdict, r.payload, w.handle
