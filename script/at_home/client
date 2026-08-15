@@ -13,7 +13,10 @@
 #                               default:  $POLYCUBE_AT_HOME
 #                               or:       http://127.0.0.1:9292
 #   --handle HANDLE           permanent scheduling ID, opaque and never displayed
-#                               default: client-<hostname>-<pid>
+#                               default: read from ~/.polycubing-at-home/handle,
+#                               generated on first run and reused after, so a
+#                               restart is the same volunteer and not a new one
+#                               override the location with POLYCUBE_AT_HOME_HANDLE
 #   --name NAME               display name for credits — subject to approval
 #                             before it appears in data/
 #                               default: none
@@ -42,6 +45,8 @@
 #   script/at_home/client --limit 10
 #   script/at_home/client --once
 
+require 'fileutils'
+require 'securerandom'
 require 'socket'
 require_relative '../../lib/census'
 
@@ -71,9 +76,26 @@ def check_for_unknown_options arguments
 end
 
 def default_url    = ENV.fetch 'POLYCUBE_AT_HOME', 'http://127.0.0.1:9292'
-def default_handle = "client-#{Socket.gethostname}-#{Process.pid}"
 def default_proofs = Census::AtHome::Client::DEFAULT_PROOFS
+def handle_file    = ENV.fetch 'POLYCUBE_AT_HOME_HANDLE', File.expand_path('~/.polycubing-at-home/handle')
 def reporter       = ->(line) { puts "#{Time.now.utc.iso8601}  #{line}" }
+
+# A volunteer is one identity, not one process.
+#
+# The handle used to carry the pid, so every restart registered a stranger.
+# That scattered credits across dozens of one-unit contributors, and left the
+# coordinator asking for a proof from an identity that would never return.
+# Written once and reused, so several clients on one machine are one volunteer.
+def default_handle
+  return File.read(handle_file).strip if File.exist? handle_file
+
+  handle = "client-#{Socket.gethostname}-#{SecureRandom.hex 4}"
+
+  FileUtils.mkdir_p File.dirname(handle_file)
+  File.write handle_file, "#{handle}\n"
+
+  handle
+end
 
 # Extract options
 url            = option arguments, '--url',           default_url

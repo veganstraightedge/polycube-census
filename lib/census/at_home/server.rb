@@ -90,7 +90,7 @@ module Census
 
       before do
         content_type :json
-        halt(PAYLOAD_TOO_LARGE, json(error: "payload too large")) if request.content_length.to_i > MAX_BODY_BYTES
+        halt(PAYLOAD_TOO_LARGE, json(error: "payload too large")) if request.content_length.to_i > body_cap
       end
 
       post "/register" do
@@ -100,9 +100,25 @@ module Census
                                           contact: body[:contact]))
       end
 
+      # The reply carries any proofs owed. A client polls rather than listens,
+      # so a request for one rides the request it was already going to make.
       post "/lease" do
         body = parse_body
-        json(unit: coordinator.lease(client_id: Integer(require_field(body, :client_id))))
+        client_id = Integer(require_field(body, :client_id))
+
+        json(unit: coordinator.lease(client_id:), wanted_proofs: coordinator.wanted_proofs(client_id:))
+      end
+
+      # Proof bytes, not JSON. A DRAT proof is binary and runs to megabytes, so
+      # it arrives as a raw body under the digest it is supposed to hash to.
+      post "/proof/:sha256" do
+        digest = params[:sha256].to_s
+        halt(BAD_REQUEST, json(error: "malformed digest")) unless digest.match?(Coordinator::DIGEST)
+
+        bytes = request.body.read(Coordinator::MAX_PROOF_BYTES + 1).to_s
+        halt(PAYLOAD_TOO_LARGE, json(error: "proof too large")) if bytes.bytesize > Coordinator::MAX_PROOF_BYTES
+
+        json(coordinator.deliver_proof(sha256: digest, bytes:))
       end
 
       post "/results" do
@@ -137,6 +153,10 @@ module Census
       private
 
       def coordinator = self.class.coordinator
+
+      # JSON bodies stay small. A proof is the one thing allowed to be big, and
+      # only because it cannot be anything else.
+      def body_cap = request.path.start_with?("/proof") ? Coordinator::MAX_PROOF_BYTES : MAX_BODY_BYTES
 
       def parse_body
         raw = request.body.read(MAX_BODY_BYTES + 1).to_s

@@ -103,12 +103,74 @@ module Census
         row && unit_from(row)
       end
 
-      def record_result(unit_id:, client_id:, verdict:, payload:, seconds:, verified:, note: nil)
+      def record_result(unit_id:, client_id:, verdict:, payload:, seconds:, verified:, note: nil,
+                        proof: nil, proof_state: "none")
+        values = [unit_id, client_id, verdict, JSON.generate(payload), seconds, verified, note,
+                  proof && proof[:sha256], proof && proof[:bytes], proof_state]
+
         synchronize do |connection|
-          connection.exec_params(<<~SQL, [unit_id, client_id, verdict, JSON.generate(payload), seconds, verified, note])
-            INSERT INTO results (unit_id, client_id, verdict, payload, seconds, verified, verifier_note)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+          connection.exec_params(<<~SQL, values)
+            INSERT INTO results (unit_id, client_id, verdict, payload, seconds, verified, verifier_note,
+                                 proof_sha256, proof_bytes, proof_state)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           SQL
+        end
+      end
+
+      # The proofs the coordinator has decided it wants but has not received.
+      # A worker asks on its next visit whether anything is owed.
+      def wanted_proofs(client_id:)
+        rows = synchronize do |connection|
+          connection.exec_params(<<~SQL, [client_id])
+            SELECT proof_sha256 FROM results
+             WHERE client_id = $1 AND proof_state = 'wanted'
+             ORDER BY created_at
+          SQL
+        end
+
+        rows.map { it["proof_sha256"] }
+      end
+
+      def want_proof(sha256)
+        synchronize do |connection|
+          connection.exec_params(<<~SQL, [sha256]).cmd_tuples
+            UPDATE results SET proof_state = 'wanted'
+             WHERE proof_sha256 = $1 AND proof_state = 'claimed'
+          SQL
+        end
+      end
+
+      # Which unit a promised proof belongs to, so the formula it must refute
+      # can be rebuilt. Only proofs actually asked for are answerable, so an
+      # upload nobody requested has nowhere to land.
+      def wanted_proof(sha256)
+        row = synchronize do |connection|
+          connection.exec_params(<<~SQL, [sha256]).first
+            SELECT results.id, results.proof_bytes, units.payload AS unit_payload
+              FROM results JOIN units ON units.id = results.unit_id
+             WHERE results.proof_sha256 = $1 AND results.proof_state = 'wanted'
+             LIMIT 1
+          SQL
+        end
+        return nil unless row
+
+        { id: Integer(row["id"]),
+          bytes: row["proof_bytes"] && Integer(row["proof_bytes"]),
+          unit: JSON.parse(row["unit_payload"], symbolize_names: true) }
+      end
+
+      def record_proof(id:, state:, path: nil, note: nil)
+        synchronize do |connection|
+          connection.exec_params(<<~SQL, [id, state, path, note])
+            UPDATE results SET proof_state = $2, proof_path = $3, checker_note = $4 WHERE id = $1
+          SQL
+        end
+      end
+
+      def proof_states
+        synchronize do |connection|
+          connection.exec("SELECT proof_state, count(*) FROM results GROUP BY proof_state")
+                    .to_h { [it["proof_state"], Integer(it["count"])] }
         end
       end
 

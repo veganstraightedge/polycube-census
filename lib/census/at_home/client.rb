@@ -64,6 +64,8 @@ module Census
           lease = post("/lease", { client_id: })
           break tally["stopped"] = 1 unless lease
 
+          hand_over(lease[:wanted_proofs], tally)
+
           unit = lease[:unit]
           unless unit
             break if once
@@ -136,15 +138,44 @@ module Census
         SAT::Proof.of(destination)
       end
 
+      def post(path, body) = deliver(path, JSON.generate(body), "application/json")
+
+      # A proof goes up as raw bytes. Base64 would inflate a hundred megabytes
+      # by a third to say nothing extra.
+      def post_proof(sha256)
+        deliver("/proof/#{sha256}", File.binread(proof_path(sha256)), "application/octet-stream")
+      end
+
+      def proof_path(sha256) = File.join(proofs, "#{sha256}.drat")
+
+      # The coordinator asked to see proofs it was previously only told about.
+      # Handing them over is what makes the digest more than a gesture, so it
+      # happens before taking more work.
+      def hand_over(wanted, tally)
+        Array(wanted).each do |sha256|
+          unless File.exist?(proof_path(sha256))
+            report&.call("proof #{sha256[0, 12]} requested but not on this disk")
+            tally["proof missing"] += 1
+            next
+          end
+
+          answer = post_proof(sha256)
+          next unless answer
+
+          tally[answer[:accepted] ? "proof verified" : "proof rejected"] += 1
+          report&.call("proof #{sha256[0, 12]}  #{answer[:note]}")
+        end
+      end
+
       # Retries while the coordinator is unreachable or unwell, and raises
       # only on failures retrying cannot fix (a malformed request of ours).
       # Returns nil if it gives up, so callers can stop cleanly rather than
       # crash with a stack trace in a volunteer's terminal.
-      def post(path, body)
+      def deliver(path, body, content_type)
         waited = 0
         attempt = 0
         begin
-          exchange(path, body)
+          exchange(path, body, content_type)
         rescue *TRANSIENT_ERRORS, TransientResponse => error
           delay = RETRY_DELAYS[[attempt, RETRY_DELAYS.size - 1].min]
           if give_up_after && waited + delay > give_up_after
@@ -160,10 +191,10 @@ module Census
         end
       end
 
-      def exchange(path, body)
+      def exchange(path, body, content_type)
         request = Net::HTTP::Post.new(URI.join(base, path))
-        request["Content-Type"] = "application/json"
-        request.body = JSON.generate(body)
+        request["Content-Type"] = content_type
+        request.body = body
         response = Net::HTTP.start(base.host, base.port, read_timeout: 300, open_timeout: 30) { it.request(request) }
 
         # Throttling and server errors mean "not now"; other 4xx means we

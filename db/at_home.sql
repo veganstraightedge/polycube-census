@@ -58,3 +58,32 @@ CREATE TABLE IF NOT EXISTS results (
 );
 
 CREATE INDEX IF NOT EXISTS results_unit ON results (unit_id);
+
+-- The life of a refutation's proof.
+--
+-- A worker reporting `unsat` sends the digest and size of a DRAT proof it keeps
+-- on its own disk, never the bytes. These columns follow that promise: what was
+-- claimed, whether the coordinator asked for it, where it landed, and what the
+-- checker said. Columns rather than payload keys, so the proofs still owed can
+-- be found without reading every result's jsonb.
+--
+--   none       not a refutation, or none claimed
+--   claimed    a digest was reported and the bytes are on the worker's disk
+--   wanted     the coordinator has asked for the bytes
+--   stored     the bytes arrived and hashed to what was promised
+--   verified   drat-trim checked the proof against the formula it refutes
+--   refuted    the checker ran and the proof did not hold
+--   too_large  over the upload cap, so unverifiable this way (pending S3)
+ALTER TABLE results ADD COLUMN IF NOT EXISTS proof_sha256 TEXT;
+ALTER TABLE results ADD COLUMN IF NOT EXISTS proof_bytes  BIGINT;
+ALTER TABLE results ADD COLUMN IF NOT EXISTS proof_path   TEXT;
+ALTER TABLE results ADD COLUMN IF NOT EXISTS checker_note TEXT;
+ALTER TABLE results ADD COLUMN IF NOT EXISTS proof_state  TEXT NOT NULL DEFAULT 'none';
+
+-- A CHECK takes no IF NOT EXISTS, so it is replaced instead of added.
+ALTER TABLE results DROP CONSTRAINT IF EXISTS results_proof_state;
+ALTER TABLE results ADD CONSTRAINT results_proof_state CHECK (
+  proof_state IN ('none', 'claimed', 'wanted', 'stored', 'verified', 'refuted', 'too_large')
+);
+
+CREATE INDEX IF NOT EXISTS results_proof ON results (proof_state);

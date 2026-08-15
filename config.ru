@@ -16,6 +16,7 @@ require_relative "lib/census"
 
 threads = Integer(ENV.fetch("AT_HOME_THREADS", "16"))
 store = Census::AtHome::Store.new(pool_size: threads)
-Census::AtHome::Server.coordinator = Census::AtHome::Coordinator.new(store:)
+proofs = ENV.fetch("AT_HOME_PROOFS", Census::AtHome::Coordinator::DEFAULT_PROOFS)
+Census::AtHome::Server.coordinator = Census::AtHome::Coordinator.new(store:, proofs:)
 
 run Census::AtHome::Server

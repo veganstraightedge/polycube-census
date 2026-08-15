@@ -125,4 +125,78 @@ RSpec.describe Census::AtHome::Coordinator, :home do
       expect(coordinator.status[:units]).to eq({ "pending" => 1 })
     end
   end
+
+  # The digest is a promise. This is the coordinator calling it in.
+  describe "taking delivery of a proof" do
+    let(:contradiction) { "spec/fixtures/proof/contradiction.cnf" }
+    let(:proof)         { "spec/fixtures/proof/contradiction.drat" }
+    let(:bytes)         { File.binread(proof) }
+    let(:digest)        { Digest::SHA256.hexdigest(bytes) }
+
+    around { |example| Dir.mktmpdir { |dir| @proofs = dir and example.run } }
+
+    let(:coordinator) { described_class.new(store:, proofs: @proofs) }
+
+    # Claim a refutation the way a worker would, then ask for its proof.
+    def claim_and_want(cnf_path: contradiction, cube: [])
+      store.add_unit(kind: "cube", shape_id: "8/1309", payload: { cnf_path:, cube: })
+      worker = coordinator.register(handle: "spec")
+      unit = coordinator.lease(client_id: worker[:id])
+      coordinator.submit(unit_id: unit[:id], client_id: worker[:id], verdict: "unsat",
+                         payload: { cube:, proof: { sha256: digest, bytes: bytes.bytesize } })
+      coordinator.want_proof(digest)
+    end
+
+    it "checks a delivered proof against the formula it rebuilds itself" do
+      claim_and_want
+
+      answer = coordinator.deliver_proof(sha256: digest, bytes:)
+
+      expect(answer[:accepted]).to be(true)
+      expect(answer[:note]).to match(/verified/)
+      expect(coordinator.status[:proofs]).to eq({ "verified" => 1 })
+    end
+
+    it "keeps the bytes under the digest they hash to" do
+      claim_and_want
+      coordinator.deliver_proof(sha256: digest, bytes:)
+
+      expect(File.binread(File.join(@proofs, "#{digest}.drat"))).to eq(bytes)
+    end
+
+    # Content addressing is worth nothing if the bytes are not checked
+    # against the name they arrived under.
+    it "refuses bytes that do not hash to the digest they claim" do
+      claim_and_want
+
+      answer = coordinator.deliver_proof(sha256: digest, bytes: "#{bytes}tampered")
+
+      expect(answer).to include(accepted: false, note: /hash to/)
+      expect(coordinator.status[:proofs]).to eq({ "wanted" => 1 })
+    end
+
+    it "refuses a proof nobody asked for" do
+      answer = coordinator.deliver_proof(sha256: digest, bytes:)
+
+      expect(answer).to include(accepted: false, note: /nobody|no proof was asked/)
+    end
+
+    # The threat this exists to catch: a volunteer claims a refutation of a
+    # formula that is in fact satisfiable, and sends a real proof of some other
+    # formula. It checks out on its own terms and against ours it does not.
+    # A cube only adds unit clauses, so it can never turn its base formula
+    # satisfiable — the lie has to be about which formula was solved.
+    it "refutes a real proof aimed at a formula the coordinator did not hand out" do
+      claim_and_want(cnf_path: "spec/fixtures/proof/satisfiable.cnf")
+
+      answer = coordinator.deliver_proof(sha256: digest, bytes:)
+
+      expect(answer).to include(accepted: false, note: /refuted/)
+      expect(coordinator.status[:proofs]).to eq({ "refuted" => 1 })
+    end
+
+    it "asks only for proofs that were claimed" do
+      expect(coordinator.want_proof(digest)).to be(false)
+    end
+  end
 end
