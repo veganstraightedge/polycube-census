@@ -50,10 +50,13 @@ def flag? arguments, flag
   true
 end
 
+# Anything still flag-shaped once the known flags are taken is a typo, and must
+# be caught before the leftovers are read as N.
 def check_for_unknown_options arguments
-  return if arguments.empty?
+  unknown = arguments.select { it.start_with? '--' }
+  return if unknown.empty?
 
-  abort "unknown option(s): #{arguments.join ' '}"
+  abort "unknown option(s): #{unknown.join ' '}"
 end
 
 def root  = File.expand_path '../../data', __dir__
@@ -75,13 +78,18 @@ def records_of_size size
 end
 
 # Extract options
-limit       = option(arguments, '--limit', nil)&.then { Integer it }
-unresolved  = flag?  arguments, '--unresolved'
-size        = arguments.shift
+limit      = option(arguments, '--limit', nil)&.then { Integer it }
+unresolved = flag?  arguments, '--unresolved'
 
 # Check options
-usage if size.nil?
 check_for_unknown_options arguments
+
+# Extract arguments
+size = arguments.shift
+
+# Check arguments
+usage if size.nil?
+abort "unexpected argument(s): #{arguments.join ' '}" unless arguments.empty?
 
 # Choose shapes
 records = records_of_size Integer(size)
