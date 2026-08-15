@@ -12,7 +12,7 @@
 -- permanent, never displayed — leases and results hang off it forever.
 -- `display_name` is what appears in credits.solved_by: mutable, moderated,
 -- scrubbable years later without touching a single result.
-CREATE TABLE IF NOT EXISTS workers (
+CREATE TABLE IF NOT EXISTS clients (
   id           BIGSERIAL PRIMARY KEY,
   handle       TEXT NOT NULL UNIQUE,
   display_name TEXT,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS units (
   payload      JSONB NOT NULL,
   status       TEXT NOT NULL DEFAULT 'pending'
                  CHECK (status IN ('pending', 'leased', 'done', 'exhausted', 'split')),
-  lease_worker BIGINT REFERENCES workers (id),
+  lease_client BIGINT REFERENCES clients (id),
   lease_until  TIMESTAMPTZ,
   attempts     INTEGER NOT NULL DEFAULT 0,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -46,7 +46,7 @@ CREATE INDEX IF NOT EXISTS units_shape ON units (shape_id);
 CREATE TABLE IF NOT EXISTS results (
   id           BIGSERIAL PRIMARY KEY,
   unit_id      BIGINT NOT NULL REFERENCES units (id),
-  worker_id    BIGINT NOT NULL REFERENCES workers (id),
+  client_id    BIGINT NOT NULL REFERENCES clients (id),
   verdict      TEXT NOT NULL
                  CHECK (verdict IN ('tiler', 'exhausted', 'unsat', 'sat', 'error')),
   payload      JSONB NOT NULL DEFAULT '{}'::jsonb,

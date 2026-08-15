@@ -5,31 +5,31 @@ require "net/http"
 require "uri"
 
 module Census
-  module Home
+  module AtHome
     # The volunteer half: ask for a unit, solve it locally, hand back the
     # answer, repeat. Holds no census state and needs no trust in either
     # direction — the coordinator re-verifies everything it returns.
-    class Worker
+    class Client
       def initialize(url:, handle:, display_name: nil, contact: nil, report: nil)
         @base = URI(url)
         @handle = handle
         @display_name = display_name
         @contact = contact
         @report = report
-        @worker_id = nil
+        @client_id = nil
       end
 
       def register
-        @worker_id = post("/register", { handle:, display_name:, contact: })[:worker][:id]
+        @client_id = post("/register", { handle:, display_name:, contact: })[:worker][:id]
       end
 
       # Runs until the queue is empty (or limit units are done). Returns a
       # tally of what happened, for the caller to print.
       def run(limit: nil, idle_sleep: 5, once: false)
-        register unless worker_id
+        register unless client_id
         tally = Hash.new(0)
         loop do
-          unit = post("/lease", { worker_id: })[:unit]
+          unit = post("/lease", { client_id: })[:unit]
           unless unit
             break if once
 
@@ -39,7 +39,7 @@ module Census
           end
 
           verdict, payload, seconds = solve(unit)
-          answer = post("/results", { unit_id: unit[:id], worker_id:, verdict:, payload:, seconds: })
+          answer = post("/results", { unit_id: unit[:id], client_id:, verdict:, payload:, seconds: })
           tally[answer[:accepted] ? "accepted" : "rejected"] += 1
           tally[verdict] += 1
           report&.call("#{unit[:shape_id]}  #{verdict}  #{answer[:accepted] ? 'accepted' : "REJECTED (#{answer[:note]})"}  #{seconds}s")
@@ -50,7 +50,7 @@ module Census
 
       private
 
-      attr_reader :base, :contact, :display_name, :handle, :report, :worker_id
+      attr_reader :base, :contact, :display_name, :handle, :report, :client_id
 
       def solve(unit)
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)

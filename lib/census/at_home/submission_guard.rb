@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Census
-  module Home
+  module AtHome
     # Bounds a submission before the geometry verifier ever sees it.
     #
     # Verification is compute: a certificate claiming a million placements

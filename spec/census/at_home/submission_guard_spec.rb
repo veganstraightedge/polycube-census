@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Census::Home::SubmissionGuard do
+RSpec.describe Census::AtHome::SubmissionGuard do
   def rejection(payload, verdict: "tiler")
     described_class.new(payload:, verdict:).rejection
   end

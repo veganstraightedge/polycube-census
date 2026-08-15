@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Census
-  module Home
+  module AtHome
     # The trust boundary. Workers may be strangers, buggy, or hostile; every
     # result they return is re-derived here with plain geometry before it is
     # accepted. A tiling certificate must cover its lattice exactly once; a
@@ -14,10 +14,10 @@ module Census
         @lease_seconds = lease_seconds
       end
 
-      def register(handle:, display_name: nil, contact: nil) = store.register_worker(handle:, display_name:, contact:)
+      def register(handle:, display_name: nil, contact: nil) = store.register_client(handle:, display_name:, contact:)
 
-      def lease(worker_id:)
-        unit = store.lease_unit(worker_id:, seconds: lease_seconds)
+      def lease(client_id:)
+        unit = store.lease_unit(client_id:, seconds: lease_seconds)
         return nil unless unit
 
         { id: unit[:id], kind: unit[:kind], shape_id: unit[:shape_id] }.merge(unit[:payload])
@@ -25,13 +25,13 @@ module Census
 
       # verdicts: "tiler" (certificate attached), "exhausted" (budgets spent),
       # "unsat"/"sat" (cube units), "error".
-      def submit(unit_id:, worker_id:, verdict:, payload: {}, seconds: nil)
+      def submit(unit_id:, client_id:, verdict:, payload: {}, seconds: nil)
         unit = store.unit(unit_id)
         return { accepted: false, note: "no such unit" } unless unit
 
         accepted, note = verify(unit:, verdict:, payload:)
-        store.record_result(unit_id:, worker_id:, verdict:, payload:, seconds:, verified: accepted, note:)
-        store.credit_worker(id: worker_id, accepted:)
+        store.record_result(unit_id:, client_id:, verdict:, payload:, seconds:, verified: accepted, note:)
+        store.credit_client(id: client_id, accepted:)
 
         if accepted
           store.close_unit(id: unit_id, status: verdict == "exhausted" ? "exhausted" : "done")

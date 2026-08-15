@@ -2,13 +2,13 @@
 
 require "tmpdir"
 
-RSpec.describe Census::Home::Promoter, :home do
-  let(:store) { Census::Home::Store.new }
-  let(:coordinator) { Census::Home::Coordinator.new(store:) }
+RSpec.describe Census::AtHome::Archiver, :home do
+  let(:store) { Census::AtHome::Store.new }
+  let(:coordinator) { Census::AtHome::Coordinator.new(store:) }
   let(:straight) { Census::Polycube.new(cells: [[0, 0, 0], [0, 0, 1], [0, 0, 2]]) }
 
   before do
-    store.load_schema(File.expand_path("../../../db/home.sql", __dir__))
+    store.load_schema(File.expand_path("../../../db/at_home.sql", __dir__))
     store.reset
   end
 
@@ -19,9 +19,9 @@ RSpec.describe Census::Home::Promoter, :home do
     record = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
     store.add_unit(kind: "shape", shape_id: "3/1", payload: { cells: record[:cells], budgets: {} })
     worker = coordinator.register(handle:, display_name:)
-    unit = coordinator.lease(worker_id: worker[:id])
+    unit = coordinator.lease(client_id: worker[:id])
     certificate = Census::TorusSearch.new(shape: Census::Polycube.new(cells: record[:cells])).certificate
-    coordinator.submit(unit_id: unit[:id], worker_id: worker[:id], verdict: "tiler", payload: { certificate: })
+    coordinator.submit(unit_id: unit[:id], client_id: worker[:id], verdict: "tiler", payload: { certificate: })
     worker
   end
 

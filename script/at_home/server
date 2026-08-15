@@ -3,10 +3,10 @@
 
 # The polycubing@home coordinator (Sinatra on Puma).
 #
-#   script/home/server [--port 9292] [--threads 16]
+#   script/at_home/server [--port 9292] [--threads 16]
 #
-# Database: $POLYCUBE_HOME_URL, default postgres:///polycube_home
-# Create it once with: script/home/setup
+# Database: $POLYCUBE_AT_HOME_URL, default postgres:///polycube_at_home
+# Create it once with: script/at_home/setup
 #
 # Deployment note: terminate TLS and apply crude flood protection at a
 # reverse proxy; this process handles application-level limits only.
@@ -28,13 +28,13 @@ end
 port = Integer(option(arguments, "--port", "9292"))
 threads = Integer(option(arguments, "--threads", "16"))
 
-store = Census::Home::Store.new(pool_size: threads)
-Census::Home::Server.coordinator = Census::Home::Coordinator.new(store:)
+store = Census::AtHome::Store.new(pool_size: threads)
+Census::AtHome::Server.coordinator = Census::AtHome::Coordinator.new(store:)
 
 configuration = Puma::Configuration.new do |config|
   config.bind("tcp://0.0.0.0:#{port}")
   config.threads(1, threads)
-  config.app(Census::Home::Server)
+  config.app(Census::AtHome::Server)
   config.log_requests(false)
 end
 

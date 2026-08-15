@@ -2,18 +2,18 @@
 # frozen_string_literal: true
 
 # Create (or reset) the coordinator database. Usage:
-#   script/home/setup [--reset]
+#   script/at_home/setup [--reset]
 
 require_relative "../../lib/census"
 
-schema = File.expand_path("../../db/home.sql", __dir__)
-url = ENV.fetch("POLYCUBE_HOME_URL", "postgres:///polycube_home")
+schema = File.expand_path("../../db/at_home.sql", __dir__)
+url = ENV.fetch("POLYCUBE_AT_HOME_URL", "postgres:///polycube_at_home")
 
 # The test database exists so `script/test` can truncate freely without
 # touching a live queue; keep both in step.
-[url, "postgres:///polycube_home_test"].uniq.each do |database_url|
+[url, "postgres:///polycube_at_home_test"].uniq.each do |database_url|
   system("createdb", database_url.split("/").last, err: File::NULL)
-  store = Census::Home::Store.new(url: database_url)
+  store = Census::AtHome::Store.new(url: database_url)
   store.load_schema(schema)
   store.reset if ARGV.include?("--reset") && database_url == url
   puts "ready: #{database_url}  #{store.status[:units].inspect}"

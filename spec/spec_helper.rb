@@ -2,7 +2,7 @@
 
 # The @home specs truncate what they touch, so they get their own database —
 # running the suite must never disturb a live coordinator's queue.
-ENV["POLYCUBE_HOME_URL"] ||= "postgres:///polycube_home_test"
+ENV["POLYCUBE_AT_HOME_URL"] ||= "postgres:///polycube_at_home_test"
 
 require_relative "../lib/census"
 
@@ -21,9 +21,9 @@ RSpec.configure do |config|
   # polycubing@home specs need a live coordinator database; skip them when
   # one isn't configured so the core suite runs anywhere.
   config.before(:each, :home) do
-    Census::Home::Store.new.close
+    Census::AtHome::Store.new.close
   rescue StandardError => error
-    skip "coordinator database unavailable (#{error.class}) — run script/home/setup"
+    skip "coordinator database unavailable (#{error.class}) — run script/at_home/setup"
   end
   config.order = :random
   Kernel.srand config.seed

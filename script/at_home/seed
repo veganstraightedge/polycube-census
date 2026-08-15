@@ -3,9 +3,9 @@
 
 # Fill the coordinator's queue with shape units drawn from data/.
 #
-#   script/home/seed 5                    # every shape with n=5
-#   script/home/seed 5 --limit 10         # the first 10 of them
-#   script/home/seed 9 --unresolved       # only shapes still lacking a verdict
+#   script/at_home/seed 5                    # every shape with n=5
+#   script/at_home/seed 5 --limit 10         # the first 10 of them
+#   script/at_home/seed 9 --unresolved       # only shapes still lacking a verdict
 #
 # Seeding a solved size is the point during a shakedown: the coordinator
 # re-verifies whatever comes back, so the run is a end-to-end test against
@@ -40,7 +40,7 @@ records = paths.map { JSON.parse(File.read(it), symbolize_names: true) }
 records.select! { it[:verdict].nil? } if unresolved_only
 records = records.first(limit) if limit
 
-store = Census::Home::Store.new
+store = Census::AtHome::Store.new
 seeded = records.count do |record|
   store.add_unit(
     kind: "shape",

@@ -4,15 +4,15 @@ require "pg"
 require "json"
 
 module Census
-  module Home
-    # Postgres-backed state for the coordinator: workers, units, results.
+  module AtHome
+    # Postgres-backed state for the coordinator: clients, units, results.
     # Scheduling state only — the census's truth stays in data/ and git, so
     # losing this database costs in-flight leases and nothing else.
     #
     # Every query is parameterized; no value from a worker is ever
     # interpolated into SQL.
     class Store
-      DEFAULT_URL = ENV.fetch("POLYCUBE_HOME_URL", "postgres:///polycube_home")
+      DEFAULT_URL = ENV.fetch("POLYCUBE_AT_HOME_URL", "postgres:///polycube_at_home")
 
       def initialize(url: DEFAULT_URL, pool_size: 8)
         @pool = Pool.new(url:, size: pool_size)
@@ -25,20 +25,20 @@ module Census
         end
       end
 
-      def reset = synchronize { |connection| connection.exec("TRUNCATE results, units, workers RESTART IDENTITY CASCADE") }
+      def reset = synchronize { |connection| connection.exec("TRUNCATE results, units, clients RESTART IDENTITY CASCADE") }
 
       def close = pool.close
 
       # handle is the permanent scheduling key; display_name is the credit
       # string and starts unapproved — nothing reaches data/ unmoderated.
-      def register_worker(handle:, display_name: nil, contact: nil)
+      def register_client(handle:, display_name: nil, contact: nil)
         row = synchronize do |connection|
           connection.exec_params(<<~SQL, [handle, display_name, contact]).first
-            INSERT INTO workers (handle, display_name, contact) VALUES ($1, $2, $3)
+            INSERT INTO clients (handle, display_name, contact) VALUES ($1, $2, $3)
             ON CONFLICT (handle) DO UPDATE
               SET last_seen = now(),
-                  contact = COALESCE(EXCLUDED.contact, workers.contact),
-                  display_name = COALESCE(EXCLUDED.display_name, workers.display_name)
+                  contact = COALESCE(EXCLUDED.contact, clients.contact),
+                  display_name = COALESCE(EXCLUDED.display_name, clients.display_name)
             RETURNING id, handle, display_name, display_state
           SQL
         end
@@ -48,19 +48,19 @@ module Census
 
       # What credits.solved_by may say for this worker: the approved display
       # name, or the opaque handle until a human approves one.
-      def credit_string(worker_id)
+      def credit_string(client_id)
         row = synchronize do |connection|
-          connection.exec_params("SELECT handle, display_name, display_state FROM workers WHERE id = $1", [worker_id]).first
+          connection.exec_params("SELECT handle, display_name, display_state FROM clients WHERE id = $1", [client_id]).first
         end
         return nil unless row
 
         row["display_state"] == "approved" && row["display_name"] ? row["display_name"] : row["handle"]
       end
 
-      def approve_display_name(worker_id, approved: true)
+      def approve_display_name(client_id, approved: true)
         synchronize do |connection|
-          connection.exec_params("UPDATE workers SET display_state = $2 WHERE id = $1",
-                                 [worker_id, approved ? "approved" : "rejected"])
+          connection.exec_params("UPDATE clients SET display_state = $2 WHERE id = $1",
+                                 [client_id, approved ? "approved" : "rejected"])
         end
       end
 
@@ -77,10 +77,10 @@ module Census
 
       # Atomically hand out the oldest available unit: pending, or leased with
       # an expired lease (a worker that vanished mid-flight costs one lease).
-      def lease_unit(worker_id:, seconds:)
+      def lease_unit(client_id:, seconds:)
         row = synchronize do |connection|
-          connection.exec_params(<<~SQL, [worker_id, seconds]).first
-            UPDATE units SET status = 'leased', lease_worker = $1,
+          connection.exec_params(<<~SQL, [client_id, seconds]).first
+            UPDATE units SET status = 'leased', lease_client = $1,
                              lease_until = now() + ($2 || ' seconds')::interval,
                              attempts = attempts + 1
             WHERE id = (
@@ -103,10 +103,10 @@ module Census
         row && unit_from(row)
       end
 
-      def record_result(unit_id:, worker_id:, verdict:, payload:, seconds:, verified:, note: nil)
+      def record_result(unit_id:, client_id:, verdict:, payload:, seconds:, verified:, note: nil)
         synchronize do |connection|
-          connection.exec_params(<<~SQL, [unit_id, worker_id, verdict, JSON.generate(payload), seconds, verified, note])
-            INSERT INTO results (unit_id, worker_id, verdict, payload, seconds, verified, verifier_note)
+          connection.exec_params(<<~SQL, [unit_id, client_id, verdict, JSON.generate(payload), seconds, verified, note])
+            INSERT INTO results (unit_id, client_id, verdict, payload, seconds, verified, verifier_note)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
           SQL
         end
@@ -114,20 +114,20 @@ module Census
 
       def close_unit(id:, status:)
         synchronize do |connection|
-          connection.exec_params("UPDATE units SET status = $2, lease_worker = NULL, lease_until = NULL WHERE id = $1", [id, status])
+          connection.exec_params("UPDATE units SET status = $2, lease_client = NULL, lease_until = NULL WHERE id = $1", [id, status])
         end
       end
 
       def release_unit(id)
         synchronize do |connection|
-          connection.exec_params("UPDATE units SET status = 'pending', lease_worker = NULL, lease_until = NULL WHERE id = $1", [id])
+          connection.exec_params("UPDATE units SET status = 'pending', lease_client = NULL, lease_until = NULL WHERE id = $1", [id])
         end
       end
 
-      def credit_worker(id:, accepted:)
+      def credit_client(id:, accepted:)
         synchronize do |connection|
           connection.exec_params(<<~SQL, [id, accepted])
-            UPDATE workers
+            UPDATE clients
                SET accepted = accepted + CASE WHEN $2 THEN 1 ELSE 0 END,
                    rejected = rejected + CASE WHEN $2 THEN 0 ELSE 1 END,
                    last_seen = now()
@@ -148,7 +148,7 @@ module Census
                         THEN w.display_name ELSE w.handle END AS credit
               FROM results r
               JOIN units u ON u.id = r.unit_id
-              JOIN workers w ON w.id = r.worker_id
+              JOIN clients w ON w.id = r.client_id
              WHERE r.verified IS TRUE AND r.verdict = 'tiler' AND u.kind = 'shape'
              ORDER BY u.shape_id, r.created_at
           SQL
@@ -165,10 +165,10 @@ module Census
           units = connection.exec("SELECT status, count(*) FROM units GROUP BY status").to_h { [it["status"], Integer(it["count"])] }
           results = connection.exec("SELECT verdict, count(*) FROM results WHERE verified IS NOT FALSE GROUP BY verdict")
                               .to_h { [it["verdict"], Integer(it["count"])] }
-          workers = connection.exec("SELECT handle, display_name, display_state, accepted, rejected FROM workers ORDER BY accepted DESC")
+          clients = connection.exec("SELECT handle, display_name, display_state, accepted, rejected FROM clients ORDER BY accepted DESC")
                               .map { { handle: it["handle"], display_name: it["display_name"], display_state: it["display_state"],
                               accepted: Integer(it["accepted"]), rejected: Integer(it["rejected"]) } }
-          { units:, results:, workers: }
+          { units:, results:, clients: }
         end
       end
 

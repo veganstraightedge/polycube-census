@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Census
-  module Home
+  module AtHome
     # LOCKSS for computed results: move what the coordinator has learned out
     # of Postgres and into plaintext files under data/, where git and (for
     # the big pieces) S3 keep copies. The database is scheduling state — if
@@ -12,7 +12,7 @@ module Census
     # Idempotent by comparison rather than bookkeeping: it asks "what does
     # the coordinator know that data/ doesn't?" every run, so a lost flag
     # can never cause a silent gap.
-    class Promoter
+    class Archiver
       def initialize(store:, root:, report: nil)
         @store = store
         @root = root

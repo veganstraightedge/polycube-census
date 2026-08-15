@@ -3,7 +3,7 @@
 require "pg"
 
 module Census
-  module Home
+  module AtHome
     # A minimal connection pool. Puma is genuinely concurrent, so the single
     # mutex-guarded connection that served the WEBrick spike would serialize
     # the whole coordinator; this hands each request its own connection and

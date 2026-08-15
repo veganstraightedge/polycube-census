@@ -5,18 +5,18 @@
 # Every accepted result is re-verified here a second time, independently of
 # the coordinator, and its verdict is checked against data/. Usage:
 #
-#   script/home/audit
+#   script/at_home/cross_check
 
 require_relative "../../lib/census"
 require "pg"
 
-url = ENV.fetch("POLYCUBE_HOME_URL", "postgres:///polycube_home")
+url = ENV.fetch("POLYCUBE_AT_HOME_URL", "postgres:///polycube_at_home")
 connection = PG.connect(url)
 root = File.expand_path("../../data", __dir__)
 
 rows = connection.exec(<<~SQL)
   SELECT u.shape_id, r.verdict, r.payload, w.handle
-  FROM results r JOIN units u ON u.id = r.unit_id JOIN workers w ON w.id = r.worker_id
+  FROM results r JOIN units u ON u.id = r.unit_id JOIN clients w ON w.id = r.client_id
   WHERE r.verified IS TRUE
   ORDER BY u.shape_id
 SQL
@@ -43,7 +43,7 @@ rows.each do |row|
   end
 end
 
-puts "audited #{rows.count} accepted results from #{rows.map { it['handle'] }.uniq.size} workers"
+puts "audited #{rows.count} accepted results from #{rows.map { it['handle'] }.uniq.size} clients"
 agreements.sort.each { |key, count| puts "  #{key}: #{count}" }
 if failures.empty?
   puts "no disagreements with data/"

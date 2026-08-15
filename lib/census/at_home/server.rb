@@ -5,7 +5,7 @@ require "sinatra/base"
 require "rack/attack"
 
 module Census
-  module Home
+  module AtHome
     # The HTTP face of the coordinator: four JSON endpoints, no views, no
     # sessions. Everything that decides anything lives in Coordinator; this
     # class only speaks HTTP, so it can be swapped for Rails the day the
@@ -78,13 +78,13 @@ module Census
 
       post "/lease" do
         body = parse_body
-        json(unit: coordinator.lease(worker_id: Integer(require_field(body, :worker_id))))
+        json(unit: coordinator.lease(client_id: Integer(require_field(body, :client_id))))
       end
 
       post "/results" do
         body = parse_body
         json(coordinator.submit(unit_id: Integer(require_field(body, :unit_id)),
-                                worker_id: Integer(require_field(body, :worker_id)),
+                                client_id: Integer(require_field(body, :client_id)),
                                 verdict: String(require_field(body, :verdict)),
                                 payload: body[:payload] || {},
                                 seconds: body[:seconds]))
