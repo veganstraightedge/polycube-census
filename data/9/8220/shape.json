@@ -1,16 +1,16 @@
 {
   "id": "9/8220",
   "n": 9,
-  "cells": [[0,0,0],[0,0,1],[0,0,2],[0,1,0],[0,1,2],[0,2,0],[0,2,1],[1,1,1],[1,2,1]],
+  "cells": [[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 1, 0], [0, 1, 2], [0, 2, 0], [0, 2, 1], [1, 1, 1], [1, 2, 1]],
   "symmetry_order": 1,
   "chiral": true,
   "mirror_id": "9/8219",
   "verdict": "non_tiler",
   "tiles_rotations_only": false,
   "tiles_with_reflections": false,
-  "certificate": {"type":"heesch","heesch":1,"refutation":"mirror of 9/8219 — data/9/8219/cnf/corona2.drat","adjacency":"26","refutation_sha256":"3cc41ade5700f4c1b0f258b9cb3b8d3af8c4a3d2c5ffe688e3f52c3241a44106","solved_with":"witnesses and verdict mirrored from 9/8219; refutation file is 9/8219's"},
+  "certificate": { "adjacency": "26", "heesch": 1, "refutation": "mirror of 9/8219 — data/9/8219/cnf/corona2.drat", "refutation_sha256": "3cc41ade5700f4c1b0f258b9cb3b8d3af8c4a3d2c5ffe688e3f52c3241a44106", "solved_with": "witnesses and verdict mirrored from 9/8219; refutation file is 9/8219's", "type": "heesch" },
   "heesch": 1,
-  "budgets": {"box_max_volume":128,"corona_depth":2,"torus_max_index":72},
-  "credits": {"solved_by":"polycube-census v0.1.0 (mirrored from 9/8219)","verified_by":null,"prior_art":null},
-  "reached": {"corona_refuted":2}
+  "budgets": { "box_max_volume": 128, "corona_depth": 2, "torus_max_index": 72 },
+  "credits": { "prior_art": null, "solved_by": "polycube-census v0.1.0 (mirrored from 9/8219)", "verified_by": null },
+  "reached": { "corona_refuted": 2 }
 }

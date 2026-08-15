@@ -1,15 +1,26 @@
 {
   "id": "9/12153",
   "n": 9,
-  "cells": [[0,0,0],[0,0,1],[0,0,2],[0,1,1],[0,2,1],[0,2,2],[1,0,0],[1,1,2],[1,2,2]],
+  "cells": [[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 1, 1], [0, 2, 1], [0, 2, 2], [1, 0, 0], [1, 1, 2], [1, 2, 2]],
   "symmetry_order": 1,
   "chiral": true,
   "mirror_id": "9/9962",
   "verdict": "tiler",
   "tiles_rotations_only": true,
   "tiles_with_reflections": true,
-  "certificate": {"type":"torus","lattice":[[18,0,0],[15,3,0],[10,1,1]],"placements":[{"rotation":8,"offset":[-9,2,0]},{"rotation":14,"offset":[-4,1,0]},{"rotation":3,"offset":[-1,0,0]},{"rotation":5,"offset":[-3,0,0]},{"rotation":22,"offset":[-17,0,0]},{"rotation":17,"offset":[-6,1,0]}]},
+  "certificate": {
+    "lattice": [[18, 0, 0], [15, 3, 0], [10, 1, 1]],
+    "placements": [
+      { "offset": [-9, 2, 0], "rotation": 8 },
+      { "offset": [-4, 1, 0], "rotation": 14 },
+      { "offset": [-1, 0, 0], "rotation": 3 },
+      { "offset": [-3, 0, 0], "rotation": 5 },
+      { "offset": [-17, 0, 0], "rotation": 22 },
+      { "offset": [-6, 1, 0], "rotation": 17 }
+    ],
+    "type": "torus"
+  },
   "heesch": null,
-  "budgets": {"box_max_volume":96,"torus_max_index":72},
-  "credits": {"solved_by":"polycube-census v0.1.0 (mirrored from 9/9962)","verified_by":null,"prior_art":null}
+  "budgets": { "box_max_volume": 96, "torus_max_index": 72 },
+  "credits": { "prior_art": null, "solved_by": "polycube-census v0.1.0 (mirrored from 9/9962)", "verified_by": null }
 }
