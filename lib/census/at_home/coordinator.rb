@@ -68,12 +68,17 @@ module Census
                             proof:, proof_state: proof ? "claimed" : "none")
         store.credit_client(id: client_id, accepted:)
 
-        if accepted
-          store.close_unit(id: unit_id, status: verdict == "exhausted" ? "exhausted" : "done")
-        else
+        unless accepted
           store.release_unit(unit_id)
+          return { accepted:, note: }
         end
-        { accepted:, note: }
+
+        return { accepted:, note: }.merge(split(unit)) if splittable?(unit:, verdict:)
+
+        store.close_unit(id: unit_id, status: verdict == "exhausted" ? "exhausted" : "done")
+        rolled = roll_up(unit) if verdict == "unsat"
+
+        { accepted:, note: rolled ? "#{note}, and it settled #{rolled}" : note }
       end
 
       def status = store.status.merge(proofs: store.proof_states)
@@ -111,6 +116,63 @@ module Census
       attr_reader :lease_seconds, :proofs, :store
 
       def refusal(note) = { accepted: false, note: }
+
+      # Only a cube can be halved. A shape reporting `exhausted` spent its box
+      # and torus budgets, which is an answer about the shape rather than a
+      # question that got too big.
+      def splittable?(unit:, verdict:) = verdict == "exhausted" && unit[:kind] == "cube"
+
+      # A cube nobody could finish becomes two, branching on a variable it does
+      # not already fix.
+      #
+      # Soundness rests on one thing: v and not-v together cover every
+      # assignment, so no solution can hide in the gap between the halves. If
+      # both children come back refuted, the parent is refuted. A child too
+      # hard in turn is split the same way, which is the escalation the n=9
+      # campaign performed by hand.
+      def split(unit)
+        variable = branching_variable(unit[:payload])
+        return { note: "nothing left to branch on" } unless variable
+
+        cube = unit[:payload].fetch(:cube, [])
+        children = [variable, -variable].filter_map do |literal|
+          store.add_unit(kind: "cube", shape_id: unit[:shape_id], parent_id: unit[:id],
+                         payload: unit[:payload].merge(cube: cube + [literal]))
+        end
+
+        store.close_unit(id: unit[:id], status: "split")
+
+        { note: "too hard, split on variable #{variable} into #{children.size}", children: }
+      end
+
+      # The lowest variable the cube does not already fix. Deterministic and
+      # sound. A lookahead solver would choose a variable that splits the work
+      # more evenly, which is an optimization, not a correctness matter.
+      def branching_variable(payload)
+        fixed = payload.fetch(:cube, []).map(&:abs)
+
+        (1..variable_count(payload[:cnf_path])).find { !fixed.include?(it) }
+      end
+
+      def variable_count(cnf_path)
+        return 0 unless cnf_path && File.exist?(cnf_path)
+
+        File.open(cnf_path) { Integer(it.readline.split[2]) }
+      end
+
+      # A parent is settled once every child it was split into is refuted, and
+      # settling one may settle its own parent, so this walks up. No result row
+      # is written for a parent: its evidence is its children's, and inventing
+      # a result would mean inventing a worker who produced it.
+      def roll_up(unit)
+        parent_id = unit[:parent_id]
+        return nil unless parent_id && store.children_all_refuted?(parent_id)
+
+        store.close_unit(id: parent_id, status: "done")
+        parent = store.unit(parent_id)
+
+        roll_up(parent) || "unit #{parent_id}"
+      end
 
       # A local filesystem path means nothing to a volunteer and tells them
       # about a machine they have no business knowing. They fetch the formula

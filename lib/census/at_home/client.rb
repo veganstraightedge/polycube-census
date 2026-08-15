@@ -40,8 +40,13 @@ module Census
       # units can share one formula, so it is downloaded once and reused.
       DEFAULT_FORMULAS = "formulas"
 
+      # How long a volunteer spends on one cube before handing it back as too
+      # hard. An unfinished cube is not a failure: the coordinator halves it
+      # and the work goes on, so a short lease beats a heroic one.
+      DEFAULT_CUBE_TIMEOUT = 3600
+
       def initialize(url:, handle:, display_name: nil, contact: nil, report: nil, give_up_after: nil,
-                     proofs: DEFAULT_PROOFS, formulas: DEFAULT_FORMULAS)
+                     proofs: DEFAULT_PROOFS, formulas: DEFAULT_FORMULAS, cube_timeout: DEFAULT_CUBE_TIMEOUT)
         @base = URI(url)
         @handle = handle
         @display_name = display_name
@@ -50,6 +55,7 @@ module Census
         @give_up_after = give_up_after
         @proofs = proofs
         @formulas = formulas
+        @cube_timeout = cube_timeout
         @client_id = nil
       end
 
@@ -100,8 +106,8 @@ module Census
 
       private
 
-      attr_reader :base, :client_id, :contact, :display_name, :formulas, :give_up_after, :handle, :proofs,
-                  :report
+      attr_reader :base, :client_id, :contact, :cube_timeout, :display_name, :formulas, :give_up_after,
+                  :handle, :proofs, :report
 
       def solve(unit)
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -131,7 +137,11 @@ module Census
         return ["error", { note: "formula unavailable" }] unless cnf_path
 
         Tempfile.create(["census", ".drat"]) do |file|
-          model = SAT::Kissat.solve_cube(cnf_path:, cube: unit[:cube], proof_path: file.path)
+          model = SAT::Kissat.solve_cube(cnf_path:, cube: unit[:cube], proof_path: file.path,
+                                         timeout: cube_timeout)
+
+          # Handed back rather than abandoned: the coordinator splits it.
+          return ["exhausted", { cube: unit[:cube], seconds: cube_timeout }] if model == :undecided
           return ["sat", { model: model.to_a }] if model
 
           ["unsat", { cube: unit[:cube], proof: kept(SAT::Proof.of(file.path)).to_h }]

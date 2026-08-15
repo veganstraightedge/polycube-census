@@ -126,6 +126,95 @@ RSpec.describe Census::AtHome::Coordinator, :home do
     end
   end
 
+  # A cube nobody can finish becomes two. The whole escalation the n=9
+  # campaign ran by hand, expressed as data.
+  describe "splitting a cube that was too hard" do
+    let(:contradiction) { "spec/fixtures/proof/contradiction.cnf" }
+
+    # Solve a cube the way a worker would, and return what the coordinator said.
+    def report(verdict, payload, unit_id: nil, handle: "spec")
+      worker = coordinator.register(handle:)
+      unit_id ||= coordinator.lease(client_id: worker[:id])[:id]
+
+      coordinator.submit(unit_id:, client_id: worker[:id], verdict:, payload:)
+    end
+
+    def seed_cube(cube: [], parent_id: nil)
+      store.add_unit(kind: "cube", shape_id: "9/2127", parent_id:,
+                     payload: { cnf_path: contradiction, cube: })
+    end
+
+    it "halves an exhausted cube on a variable it does not already fix" do
+      seed_cube(cube: [1])
+
+      answer = report("exhausted", { cube: [1] })
+
+      expect(answer[:note]).to match(/split on variable 2 into 2/)
+      expect(coordinator.status[:units]).to eq({ "split" => 1, "pending" => 2 })
+    end
+
+    # v and not-v cover every assignment, which is the only reason a split
+    # cannot lose an answer.
+    it "gives the two halves opposite literals for that variable" do
+      seed_cube(cube: [1])
+      report("exhausted", { cube: [1] })
+
+      cubes = [2, 3].map { store.unit(it)[:payload][:cube] }
+
+      expect(cubes).to contain_exactly([1, 2], [1, -2])
+    end
+
+    it "hands the children the same formula, so nothing is re-derived" do
+      seed_cube
+      report("exhausted", { cube: [] })
+
+      expect(store.unit(2)[:payload][:cnf_path]).to eq(contradiction)
+    end
+
+    it "leaves a shape's exhausted budgets alone, since that is an answer" do
+      seed_shape(straight)
+
+      report("exhausted", { budgets: {} })
+
+      expect(coordinator.status[:units]).to eq({ "exhausted" => 1 })
+    end
+
+    it "stops splitting when the cube already fixes every variable" do
+      seed_cube(cube: [1, 2])
+
+      expect(report("exhausted", { cube: [1, 2] })[:note]).to match(/nothing left to branch on/)
+    end
+
+    describe "settling the parent" do
+      let(:proof) { { sha256: "a" * 64, bytes: 8 } }
+
+      before { seed_cube and report("exhausted", { cube: [] }) }
+
+      it "leaves the parent split while one half is unanswered" do
+        report("unsat", { cube: [1], proof: }, unit_id: 2)
+
+        expect(store.unit(1)[:status]).to eq("split")
+      end
+
+      it "settles the parent once both halves are refuted" do
+        report("unsat", { cube: [1], proof: }, unit_id: 2)
+        answer = report("unsat", { cube: [-1], proof: }, unit_id: 3)
+
+        expect(store.unit(1)[:status]).to eq("done")
+        expect(answer[:note]).to match(/settled unit 1/)
+      end
+
+      # A half coming back satisfiable settles the parent the other way. It
+      # must never be mistaken for progress toward a refutation.
+      it "does not settle the parent when a half is satisfiable" do
+        report("unsat", { cube: [1], proof: }, unit_id: 2)
+        report("sat", { model: [-1] }, unit_id: 3)
+
+        expect(store.unit(1)[:status]).to eq("split")
+      end
+    end
+  end
+
   # A volunteer is not on this machine, so a formula cannot be handed over as
   # a path and expected to open.
   describe "serving the formula behind a cube unit" do

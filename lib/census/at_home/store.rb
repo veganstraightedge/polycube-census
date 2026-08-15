@@ -119,7 +119,7 @@ module Census
               FOR UPDATE SKIP LOCKED
               LIMIT 1
             )
-            RETURNING id, kind, shape_id, parent_id, payload
+            RETURNING id, kind, shape_id, parent_id, payload, status
           SQL
         end
         row && unit_from(row)
@@ -237,6 +237,29 @@ module Census
         end
       end
 
+      # Whether every child of a split is refuted.
+      #
+      # A child counts only with a verified `unsat` against it. A child that
+      # came back `sat` does not merely fail to refute its parent, it settles
+      # the parent the other way, so "all refuted" must never be inferred from
+      # "all finished".
+      def children_all_refuted?(parent_id)
+        row = synchronize do |connection|
+          connection.exec_params(<<~SQL, [parent_id]).first
+            SELECT count(DISTINCT units.id) AS children,
+                   count(DISTINCT units.id) FILTER (
+                     WHERE results.verdict = 'unsat' AND results.verified IS TRUE
+                   ) AS refuted
+              FROM units LEFT JOIN results ON results.unit_id = units.id
+             WHERE units.parent_id = $1
+          SQL
+        end
+
+        children = Integer(row["children"])
+
+        children.positive? && children == Integer(row["refuted"])
+      end
+
       def credit_client(id:, accepted:)
         synchronize do |connection|
           connection.exec_params(<<~SQL, [id, accepted])
@@ -302,7 +325,8 @@ module Census
           kind: row["kind"],
           shape_id: row["shape_id"],
           parent_id: row["parent_id"] && Integer(row["parent_id"]),
-          payload: JSON.parse(row["payload"], symbolize_names: true)
+          payload: JSON.parse(row["payload"], symbolize_names: true),
+          status: row["status"]
         }
       end
     end
