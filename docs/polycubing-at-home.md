@@ -43,8 +43,10 @@ The tail of every census size is a handful of shapes no single worker can finish
 
 The reason to build this on day one rather than retrofit it: volunteer credit is the retention mechanic (your name on a shape in a public dataset, permanently, WHUTS-style), but free-form names invite abuse, and the record is citable and lives in git forever. Splitting the two means a name can be moderated, changed, or scrubbed years later without touching a single result or invalidating the ledger.
 
-    credit while pending:  "client-laptop-1"
-    credit once approved:  "Shane"
+```txt
+credit while pending: "client-laptop-1"
+credit once approved: "Shane"
+```
 
 ## LOCKSS: the database is not the archive
 
@@ -52,8 +54,10 @@ Postgres holds scheduling state — leases, queues, worker profiles. It is delib
 
 The archiver is idempotent by comparison rather than bookkeeping — each run asks "what does the coordinator know that `data/` doesn't?" — so an interrupted run loses nothing and a repeated run writes nothing twice. It re-verifies every certificate before writing, the third independent check after the worker and the coordinator: a coordinator compromised _after_ accepting a result still cannot put a false claim into the archive (there is a spec for exactly that).
 
-    script/at_home/archive                  # write files
-    script/at_home/archive --commit --push  # write, commit, pull-rebase, push
+```sh
+script/at_home/archive                  # write files
+script/at_home/archive --commit --push  # write, commit, pull-rebase, push
+```
 
 Scheduling is deliberately external — cron, a systemd timer, Heroku Scheduler, or Sidekiq-cron if the coordinator ever becomes a Rails app. The script is the durable artifact; the trigger is a detail.
 
@@ -65,7 +69,7 @@ Domain risks are handled where the domain lives, because no framework knows what
 
 ## Not built yet (deliberate spike boundaries)
 
-- **Sampling policy.** Proof return works end to end: a worker writes a DRAT proof, keeps it under its own digest, and reports the hash; the coordinator can ask for it, refuse bytes that hash to anything else, rebuild the formula from its own CNF and cube, and let drat-trim decide. What is missing is deciding *which* proofs to ask for. Today `want_proof` is called by hand. A rate wants tuning against real traffic rather than inventing one before any volunteer exists, and the shape of it is a random sample plus every headline claim.
+- **Sampling policy.** Proof return works end to end: a worker writes a DRAT proof, keeps it under its own digest, and reports the hash; the coordinator can ask for it, refuse bytes that hash to anything else, rebuild the formula from its own CNF and cube, and let drat-trim decide. What is missing is deciding _which_ proofs to ask for. Today `want_proof` is called by hand. A rate wants tuning against real traffic rather than inventing one before any volunteer exists, and the shape of it is a random sample plus every headline claim.
 - **Oversized proofs.** The upload cap is 100 MB, which is GitHub's blob limit, so anything larger could not join the archive even once checked. The triskelion campaign's proofs run far past it and are recorded `too_large` rather than silently skipped. Checking those needs the S3 path, which is planned and unbuilt.
 - **Automatic splitting.** The coordinator accepts `exhausted` but does not yet generate child cube units from it.
 - **Browser client.** The WASM story from PLAN_N_10; the HTTP protocol is deliberately curl-simple so it can be spoken from anywhere.
