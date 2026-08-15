@@ -8,9 +8,16 @@
 --   2. Units nest. A shape too hard for one worker becomes cubes; a cube too
 --      hard becomes sub-cubes (parent_id). The same protocol serves both.
 
+-- Two identities on purpose. `handle` is the scheduling key: opaque,
+-- permanent, never displayed — leases and results hang off it forever.
+-- `display_name` is what appears in credits.solved_by: mutable, moderated,
+-- scrubbable years later without touching a single result.
 CREATE TABLE IF NOT EXISTS workers (
   id           BIGSERIAL PRIMARY KEY,
-  name         TEXT NOT NULL UNIQUE,
+  handle       TEXT NOT NULL UNIQUE,
+  display_name TEXT,
+  display_state TEXT NOT NULL DEFAULT 'pending'
+                 CHECK (display_state IN ('pending', 'approved', 'rejected')),
   contact      TEXT,
   first_seen   TIMESTAMPTZ NOT NULL DEFAULT now(),
   last_seen    TIMESTAMPTZ NOT NULL DEFAULT now(),

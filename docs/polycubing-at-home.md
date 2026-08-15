@@ -36,6 +36,15 @@ Result: 29 units solved by two competing clients, every certificate verified on 
 
 The tail of every census size is a handful of shapes no single worker can finish. `units.parent_id` exists so a shape that exhausts its budget can be split into cube units, and a cube that times out into sub-cubes — the same escalation the n=9 campaign performed by hand, expressed as data instead of judgement calls. The worker protocol is identical at every level.
 
+## Two identities, on purpose
+
+`workers.handle` is the scheduling key: opaque, permanent, never displayed — every lease and result hangs off it forever. `workers.display_name` is what may appear in `credits.solved_by`: mutable, and gated by `display_state` (`pending` → `approved`/`rejected`). Until a human approves a name, the credit string falls back to the handle.
+
+The reason to build this on day one rather than retrofit it: volunteer credit is the retention mechanic (your name on a shape in a public dataset, permanently, WHUTS-style), but free-form names invite abuse, and the record is citable and lives in git forever. Splitting the two means a name can be moderated, changed, or scrubbed years later without touching a single result or invalidating the ledger.
+
+    credit while pending:  "worker-laptop-1"
+    credit once approved:  "Shane"
+
 ## Not built yet (deliberate spike boundaries)
 
 - **Proof return.** Cube UNSAT results are accepted on report; the design is that a worker runs drat-trim locally and returns `(verdict, proof sha256, checker output)`, with the coordinator requesting full proofs for a random sample and for headline claims. That is what makes negative results as trustworthy as positive ones.

@@ -15,7 +15,7 @@ connection = PG.connect(url)
 root = File.expand_path("../data", __dir__)
 
 rows = connection.exec(<<~SQL)
-  SELECT u.shape_id, r.verdict, r.payload, w.name
+  SELECT u.shape_id, r.verdict, r.payload, w.handle
   FROM results r JOIN units u ON u.id = r.unit_id JOIN workers w ON w.id = r.worker_id
   WHERE r.verified IS TRUE
   ORDER BY u.shape_id
@@ -43,7 +43,7 @@ rows.each do |row|
   end
 end
 
-puts "audited #{rows.count} accepted results from #{rows.map { it['name'] }.uniq.size} workers"
+puts "audited #{rows.count} accepted results from #{rows.map { it['handle'] }.uniq.size} workers"
 agreements.sort.each { |key, count| puts "  #{key}: #{count}" }
 if failures.empty?
   puts "no disagreements with data/"

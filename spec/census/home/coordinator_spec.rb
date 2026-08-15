@@ -18,22 +18,22 @@ RSpec.describe Census::Home::Coordinator, :home do
 
   it "hands a leased unit everything a worker needs to solve it" do
     seed_shape(straight)
-    worker = coordinator.register(name: "spec")
+    worker = coordinator.register(handle: "spec")
     unit = coordinator.lease(worker_id: worker[:id])
     expect(unit).to include(kind: "shape", shape_id: "3/1", cells: straight.cells)
   end
 
   it "leases each unit to only one worker at a time" do
     seed_shape(straight)
-    first = coordinator.register(name: "first")
-    second = coordinator.register(name: "second")
+    first = coordinator.register(handle: "first")
+    second = coordinator.register(handle: "second")
     coordinator.lease(worker_id: first[:id])
     expect(coordinator.lease(worker_id: second[:id])).to be_nil
   end
 
   it "accepts a valid certificate and closes the unit" do
     seed_shape(straight)
-    worker = coordinator.register(name: "spec")
+    worker = coordinator.register(handle: "spec")
     unit = coordinator.lease(worker_id: worker[:id])
     certificate = Census::TorusSearch.new(shape: straight).certificate
 
@@ -45,7 +45,7 @@ RSpec.describe Census::Home::Coordinator, :home do
 
   it "rejects a forged certificate and returns the unit to the queue" do
     seed_shape(straight)
-    worker = coordinator.register(name: "liar")
+    worker = coordinator.register(handle: "liar")
     unit = coordinator.lease(worker_id: worker[:id])
     forged = { "type" => "torus", "lattice" => [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
                "placements" => [{ "rotation" => 0, "offset" => [0, 0, 0] }] }
@@ -58,19 +58,30 @@ RSpec.describe Census::Home::Coordinator, :home do
 
   it "counts a worker's accepted and rejected submissions" do
     seed_shape(straight)
-    worker = coordinator.register(name: "mixed")
+    worker = coordinator.register(handle: "mixed")
     unit = coordinator.lease(worker_id: worker[:id])
     coordinator.submit(unit_id: unit[:id], worker_id: worker[:id], verdict: "tiler", payload: { certificate: nil })
     unit = coordinator.lease(worker_id: worker[:id])
     coordinator.submit(unit_id: unit[:id], worker_id: worker[:id], verdict: "tiler",
                        payload: { certificate: Census::TorusSearch.new(shape: straight).certificate })
 
-    expect(coordinator.status[:workers].first).to include(name: "mixed", accepted: 1, rejected: 1)
+    expect(coordinator.status[:workers].first).to include(handle: "mixed", accepted: 1, rejected: 1)
+  end
+
+  it "credits an unapproved display name as the opaque handle" do
+    worker = coordinator.register(handle: "worker-abc123", display_name: "Booger Butt")
+    expect(store.credit_string(worker[:id])).to eq("worker-abc123")
+  end
+
+  it "credits an approved display name once a human approves it" do
+    worker = coordinator.register(handle: "worker-abc123", display_name: "Ada Lovelace")
+    store.approve_display_name(worker[:id])
+    expect(store.credit_string(worker[:id])).to eq("Ada Lovelace")
   end
 
   it "rejects a cube model that contradicts its own cube" do
     store.add_unit(kind: "cube", shape_id: "9/2127", payload: { cnf_path: "/nonexistent.cnf", cube: [3, -4] })
-    worker = coordinator.register(name: "spec")
+    worker = coordinator.register(handle: "spec")
     unit = coordinator.lease(worker_id: worker[:id])
 
     answer = coordinator.submit(unit_id: unit[:id], worker_id: worker[:id], verdict: "sat", payload: { model: [1, 2, 4] })

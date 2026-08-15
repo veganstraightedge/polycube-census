@@ -14,7 +14,7 @@ module Census
         @lease_seconds = lease_seconds
       end
 
-      def register(name:, contact: nil) = store.register_worker(name:, contact:)
+      def register(handle:, display_name: nil, contact: nil) = store.register_worker(handle:, display_name:, contact:)
 
       def lease(worker_id:)
         unit = store.lease_unit(worker_id:, seconds: lease_seconds)

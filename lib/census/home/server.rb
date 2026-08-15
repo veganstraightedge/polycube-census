@@ -21,7 +21,7 @@ module Census
 
       def start
         server = WEBrick::HTTPServer.new(Port: port, Logger: quiet_logger, AccessLog: [])
-        mount(server, "/register") { |body| { worker: coordinator.register(name: body.fetch(:name), contact: body[:contact]) } }
+        mount(server, "/register") { |body| { worker: coordinator.register(handle: body.fetch(:handle), display_name: body[:display_name], contact: body[:contact]) } }
         mount(server, "/lease") { |body| { unit: coordinator.lease(worker_id: body.fetch(:worker_id)) } }
         mount(server, "/results") { |body| submit(body) }
         server.mount_proc("/status") { |_request, response| respond(response, coordinator.status) }

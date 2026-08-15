@@ -10,16 +10,17 @@ module Census
     # answer, repeat. Holds no census state and needs no trust in either
     # direction — the coordinator re-verifies everything it returns.
     class Worker
-      def initialize(url:, name:, contact: nil, report: nil)
+      def initialize(url:, handle:, display_name: nil, contact: nil, report: nil)
         @base = URI(url)
-        @name = name
+        @handle = handle
+        @display_name = display_name
         @contact = contact
         @report = report
         @worker_id = nil
       end
 
       def register
-        @worker_id = post("/register", { name:, contact: })[:worker][:id]
+        @worker_id = post("/register", { handle:, display_name:, contact: })[:worker][:id]
       end
 
       # Runs until the queue is empty (or limit units are done). Returns a
@@ -49,7 +50,7 @@ module Census
 
       private
 
-      attr_reader :base, :contact, :name, :report, :worker_id
+      attr_reader :base, :contact, :display_name, :handle, :report, :worker_id
 
       def solve(unit)
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
