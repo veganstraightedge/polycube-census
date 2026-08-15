@@ -41,5 +41,31 @@ RSpec.describe Census::SAT::Kissat do
         expect(File.size(proof_path)).to be_positive
       end
     end
+
+    it "refutes a cube by streaming the augmented formula when no proof is wanted" do
+      expect(described_class.solve_cube(cnf_path: contradiction, cube: [])).to be_nil
+    end
+
+    it "writes a DRAT proof for a refuted cube when asked" do
+      Dir.mktmpdir do |dir|
+        proof_path = File.join(dir, "refutation.drat")
+
+        expect(described_class.solve_cube(cnf_path: contradiction, cube: [], proof_path:)).to be_nil
+        expect(File.size(proof_path)).to be_positive
+      end
+    end
+
+    # The proof must refute the cube's formula, not the base one. Asserting the
+    # first variable still leaves the other two clauses contradictory.
+    it "writes a proof for a formula the cube made unsatisfiable" do
+      Dir.mktmpdir do |dir|
+        proof_path = File.join(dir, "refutation.drat")
+
+        expect(described_class.solve_cube(cnf_path: contradiction, cube: [1], proof_path:)).to be_nil
+        expect(File.size(proof_path)).to be_positive
+      end
+    end
   end
+
+  def contradiction = "spec/fixtures/proof/contradiction.cnf"
 end

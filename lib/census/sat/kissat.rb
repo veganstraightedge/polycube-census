@@ -37,7 +37,23 @@ module Census
       # Solve a stored formula under a cube (a partial assignment appended as
       # unit clauses). Returns true variables for SAT, nil for UNSAT — the
       # distributed workers' entry point for cube units.
-      def self.solve_cube(cnf_path:, cube:)
+      #
+      # With proof_path, the augmented formula is written to disk first, because
+      # kissat only emits a DRAT proof for a formula handed to it as a file. The
+      # formula is not kept: it is reproducible from cnf_path and the cube, so a
+      # checker can rebuild the exact thing the proof refutes without it being
+      # shipped anywhere.
+      def self.solve_cube(cnf_path:, cube:, proof_path: nil)
+        return streamed_cube(cnf_path:, cube:) unless proof_path
+
+        Tempfile.create(["census-cube", ".cnf"]) do |file|
+          CubeFile.stream_augmented(cnf_path:, cube:, io: file)
+          file.flush
+          run(file.path, proof_path:)
+        end
+      end
+
+      def self.streamed_cube(cnf_path:, cube:)
         output = IO.popen([ENV.fetch("CENSUS_SOLVER", "kissat")], "r+") do |io|
           CubeFile.stream_augmented(cnf_path:, cube:, io:)
           io.close_write
