@@ -13,6 +13,14 @@ RSpec.configure do |config|
 
   config.shared_context_metadata_behavior = :apply_to_host_groups
   config.disable_monkey_patching!
+
+  # polycubing@home specs need a live coordinator database; skip them when
+  # one isn't configured so the core suite runs anywhere.
+  config.before(:each, :home) do
+    Census::Home::Store.new.close
+  rescue StandardError => error
+    skip "coordinator database unavailable (#{error.class}) — run script/home-setup"
+  end
   config.order = :random
   Kernel.srand config.seed
 end

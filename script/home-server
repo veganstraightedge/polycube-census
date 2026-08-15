@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# The polycubing@home coordinator. Usage: script/home-server [--port 9292]
+#
+# Database: $POLYCUBE_HOME_URL, default postgres:///polycube_home
+# Create it once with: script/home-setup
+
+require_relative "../lib/census"
+
+arguments = ARGV.dup
+port = if (position = arguments.index("--port"))
+         arguments.delete_at(position)
+         Integer(arguments.delete_at(position))
+       else
+         9292
+       end
+
+store = Census::Home::Store.new
+coordinator = Census::Home::Coordinator.new(store:)
+Census::Home::Server.new(coordinator:, port:, logger: $stdout).start

@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Fill the coordinator's queue with shape units drawn from data/.
+#
+#   script/home-seed 5                    # every shape with n=5
+#   script/home-seed 5 --limit 10         # the first 10 of them
+#   script/home-seed 9 --unresolved       # only shapes still lacking a verdict
+#
+# Seeding a solved size is the point during a shakedown: the coordinator
+# re-verifies whatever comes back, so the run is a end-to-end test against
+# answers we already trust.
+
+require_relative "../lib/census"
+
+arguments = ARGV.dup
+
+def option(arguments, flag, default)
+  return default unless (position = arguments.index(flag))
+
+  arguments.delete_at(position)
+  arguments.delete_at(position)
+end
+
+def flag?(arguments, flag)
+  return false unless (position = arguments.index(flag))
+
+  arguments.delete_at(position)
+  true
+end
+
+limit = option(arguments, "--limit", nil)&.then { Integer(it) }
+unresolved_only = flag?(arguments, "--unresolved")
+size = Integer(arguments.fetch(0))
+root = File.expand_path("../data", __dir__)
+
+paths = Dir.glob(File.join(root, size.to_s, "*", "shape.json"))
+           .sort_by { Integer(File.basename(File.dirname(it))) }
+records = paths.map { JSON.parse(File.read(it), symbolize_names: true) }
+records.select! { it[:verdict].nil? } if unresolved_only
+records = records.first(limit) if limit
+
+store = Census::Home::Store.new
+seeded = records.count do |record|
+  store.add_unit(
+    kind: "shape",
+    shape_id: record[:id],
+    payload: {
+      cells: record[:cells],
+      budgets: { box_max_volume: Census::BoxSearch::DEFAULT_MAX_VOLUME,
+                 torus_max_index: Census::TorusSearch::DEFAULT_MAX_INDEX }
+    }
+  )
+end
+
+puts "seeded #{seeded} shape units (n=#{size}#{unresolved_only ? ', unresolved only' : ''})"
+puts store.status.inspect

@@ -34,6 +34,22 @@ module Census
         end
       end
 
+      # Solve a stored formula under a cube (a partial assignment appended as
+      # unit clauses). Returns true variables for SAT, nil for UNSAT — the
+      # distributed workers' entry point for cube units.
+      def self.solve_cube(cnf_path:, cube:)
+        output = IO.popen([ENV.fetch("CENSUS_SOLVER", "kissat")], "r+") do |io|
+          CubeFile.stream_augmented(cnf_path:, cube:, io:)
+          io.close_write
+          io.read
+        end
+        case output[/^s (\w+)/, 1]
+        when "SATISFIABLE" then true_variables(output)
+        when "UNSATISFIABLE" then nil
+        else raise "solver returned neither SAT nor UNSAT for #{cnf_path}"
+        end
+      end
+
       # With a progress IO, kissat runs un-quieted and its periodic statistics
       # lines stream there live; the verdict lines are parsed as usual.
       def self.run(path, proof_path: nil, progress: nil)
