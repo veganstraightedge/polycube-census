@@ -189,6 +189,41 @@ Still open from the original plan, both feeding the paper:
 - **Pen-and-paper track.** Counting argument: one hole per ring, one donated cell per hole, and only the 4 edge-middle cells of a ring can sit in a hole (hand-checked; corners cannot). Target: a human-readable hole-cascade proof of corona-2 impossibility; even partial results are lemmas.
 - **Deeper literature pass** through puzzle literature before any write-up (passive only until comms open, per the scoop-risk policy below).
 
+## Names, addresses, and the public face (decided 2026-08-15)
+
+The census will outlive any one person's accounts, so identity decisions are made once, early, and with an eye to what a paper can cite permanently.
+
+- **Domain: `polycubes.org`** — the subject noun is what people search and cite; `.org` for non-commercial science. Register `polycubing.org` alongside it as a redirect so the org name, the program name, and the gerund all land in the right place.
+- **GitHub org: [`polycubing`](https://github.com/polycubing)** — acquired. Contributor-facing infrastructure: `polycubing/census` (data + pipeline), the @home coordinator and clients, the site. (`polycubes` is taken by an apparently-dormant org; not worth banking on.)
+- **Crowdsourced compute program: Polycubing@home** — Folding@home's grammar, the activity as a gerund, matching the org name. The subject is polycubes; the activity is polycubing; the volunteer program is where the two meet.
+- **Citation rule: the paper cites `polycubes.org`, never a `github.com` URL.** A domain we control keeps hosting, org naming, and even the choice of forge reversible forever; a printed GitHub URL does not.
+
+### Site structure
+
+Shape ids _are_ paths — `9/2127` is already the citable name in `data/`, in the paper, and in conversation, so it addresses the page too. Never prefix it (`/shapes/9/2127`), never renumber.
+
+```
+/                      the census: what it is, the scoreboard
+/8                     octacubes index (per-n indexes, bare number)
+/9/2127                shape permalink — the id is the path
+/open                  the OPEN shortlist and the Heesch >= 2 club
+/heesch                the 3D Heesch table
+/verify                don't trust us, check us: clone, script/verify, drat-trim
+/data                  the dataset itself — structure, CC0, downloads, artifact manifest
+/at-home               Polycubing@home (canonical)
+/@home                 pretty alias, redirects to /at-home
+/at-home/volunteers    compute donors, generated from the coordinator's moderated display names
+/code                  links to the org and its repos
+/papers                published papers and pre-publication drafts
+/papers/<title-slug>   paper permalink; /papers/arxiv/<id> redirects to it
+/thanks                hand-curated humans: reviewers, advisors, lenders of servers
+/about /contact        the usual
+/contribute            one page covering compute (-> /at-home), code (-> /code), and mathematics
+/glossary              for readers who arrive without the vocabulary
+```
+
+Notes on the choices: `@` is a legal path character and `/@home` looks good, but `/at-home` is canonical because static-site generators can balk at a directory named `@home`, chat clients try to turn it into a mention, and an `@` inside a printed citation reads ambiguously. Paper URLs use title slugs rather than arXiv ids so they survive preprint-to-journal moves. The volunteer list is machine-generated and potentially enormous; `/thanks` is hand-written and small — different pages for different provenance. No `/donate`: there is no money in this, and a donate link would create an expectation to manage.
+
 ## Someday / future
 
 - **Lean (formal verification), two hooks.** At M4: check solver UNSAT proofs with a formally verified checker (Lean 4's LRAT checker or cake_lpr) for headline claims — drat-trim is itself unverified C. Post-M8 stretch: formalize the encoding's soundness ("CNF UNSAT ⇒ no tiling of ℤ³") in Lean, making the smallest-non-tiler result a fully machine-checked theorem; potential Lean-community collaboration.
