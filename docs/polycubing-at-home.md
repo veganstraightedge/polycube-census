@@ -65,8 +65,7 @@ Domain risks are handled where the domain lives, because no framework knows what
 
 ## Not built yet (deliberate spike boundaries)
 
-- **Proof return.** Cube UNSAT results are accepted on report; the design is that a worker runs drat-trim locally and returns `(verdict, proof sha256, checker output)`, with the coordinator requesting full proofs for a random sample and for headline claims. That is what makes negative results as trustworthy as positive ones.
+- **Proof checking.** Half of proof return is built. A worker now always writes a DRAT proof for a cube, keeps it under its own SHA-256, and reports `(verdict, digest, size)`. The coordinator refuses an `unsat` that names no proof, so a refutation is bound to an artifact the volunteer must still be able to produce, and says plainly in its note that the proof is unchecked. What is missing is checking one: running it through drat-trim, and the coordinator demanding full proofs for a random sample and for headline claims. That needs a checker, and drat-trim has no Homebrew formula, so choosing what every volunteer must install is an open decision.
+- **Proof upload.** The digest is a promise the coordinator cannot yet call in. There is no route for requesting a proof by hash, and no place to put one when it arrives.
 - **Automatic splitting.** The coordinator accepts `exhausted` but does not yet generate child cube units from it.
-- **Writing back to `data/`.** Accepted certificates live in the results table; promoting them into shape records (and committing) is still a human-run step.
 - **Browser client.** The WASM story from PLAN_N_10; the HTTP protocol is deliberately curl-simple so it can be spoken from anywhere.
-- **Connection pooling.** One PG connection serialized behind a mutex — fine at a coordinator's request rates, an obvious upgrade at fleet scale.

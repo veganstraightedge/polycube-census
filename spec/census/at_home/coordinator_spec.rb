@@ -87,4 +87,42 @@ RSpec.describe Census::AtHome::Coordinator, :home do
     answer = coordinator.submit(unit_id: unit[:id], client_id: worker[:id], verdict: "sat", payload: { model: [1, 2, 4] })
     expect(answer[:accepted]).to be(false)
   end
+
+  # A refutation that names no artifact cannot be audited, ever. It used to be
+  # taken on the volunteer's word.
+  describe "cube refutations" do
+    def refute(payload)
+      store.add_unit(kind: "cube", shape_id: "9/2127", payload: { cnf_path: "/nonexistent.cnf", cube: [3] })
+      worker = coordinator.register(handle: "spec")
+      unit = coordinator.lease(client_id: worker[:id])
+
+      coordinator.submit(unit_id: unit[:id], client_id: worker[:id], verdict: "unsat", payload:)
+    end
+
+    let(:digest) { "a" * 64 }
+
+    it "rejects one that names no proof" do
+      expect(refute(cube: [3])).to include(accepted: false, note: /names no proof/)
+    end
+
+    it "rejects a digest that did not come from hashing a file" do
+      expect(refute(proof: { sha256: "not-a-digest", bytes: 8 })).to include(accepted: false, note: /malformed/)
+    end
+
+    # kissat writes nothing when it never derives a clause. An absence of bytes
+    # is an absence of evidence.
+    it "rejects an empty proof" do
+      expect(refute(proof: { sha256: digest, bytes: 0 })).to include(accepted: false, note: /refutes nothing/)
+    end
+
+    it "accepts one that names a proof, and says plainly that it is unchecked" do
+      expect(refute(proof: { sha256: digest, bytes: 8 })).to include(accepted: true, note: /unchecked/)
+    end
+
+    it "returns the unit to the queue when the refutation is refused" do
+      refute(cube: [3])
+
+      expect(coordinator.status[:units]).to eq({ "pending" => 1 })
+    end
+  end
 end

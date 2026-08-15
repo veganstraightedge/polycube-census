@@ -9,6 +9,9 @@ module Census
     # fails is rejected and its unit returns to the queue — no reputation
     # system required, because nothing is ever believed on a worker's word.
     class Coordinator
+      # A SHA-256, lowercase hex. Anything else did not come from hashing a file.
+      DIGEST = /\A[0-9a-f]{64}\z/
+
       def initialize(store:, lease_seconds: 900)
         @store = store
         @lease_seconds = lease_seconds
@@ -56,7 +59,7 @@ module Census
         when "tiler" then verify_certificate(unit:, payload:)
         when "exhausted" then [true, "budgets accepted as reported"]
         when "sat" then verify_cube_model(unit:, payload:)
-        when "unsat" then [true, "cube refutation accepted (proof checking is a separate pass)"]
+        when "unsat" then verify_cube_refutation(payload:)
         else [false, "unknown verdict #{verdict}"]
         end
       end
@@ -70,6 +73,22 @@ module Census
         [valid, valid ? "certificate verified by geometry" : "certificate failed geometric verification"]
       rescue StandardError => error
         [false, "verification error: #{error.message}"]
+      end
+
+      # A refutation is accepted only if it names a proof. That is weaker than
+      # checking one, and much stronger than the bare word "unsat": the digest
+      # binds the volunteer to a specific artifact they must still be able to
+      # produce, which is what makes a later audit possible at all. Checking
+      # the proof itself is the next pass, and needs a checker.
+      def verify_cube_refutation(payload:)
+        proof = payload[:proof]
+        return [false, "refutation names no proof"] unless proof.is_a?(Hash)
+
+        digest = proof[:sha256]
+        return [false, "proof digest missing or malformed"] unless digest.is_a?(String) && digest.match?(DIGEST)
+        return [false, "proof is empty, which refutes nothing"] unless proof[:bytes].is_a?(Integer) && proof[:bytes].positive?
+
+        [true, "refutation accepted, proof #{digest[0, 12]} unchecked"]
       end
 
       def verify_cube_model(unit:, payload:)

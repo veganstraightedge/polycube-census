@@ -42,4 +42,42 @@ RSpec.describe Census::AtHome::Client do
     expect(client.run(once: true)).to eq({ "stopped" => 1 })
     expect(notes.last).to match(/UNREPORTED/)
   end
+
+  describe "refuting a cube" do
+    let(:contradiction) { "spec/fixtures/proof/contradiction.cnf" }
+
+    around do |example|
+      Dir.mktmpdir { |dir| @proofs = dir and example.run }
+    end
+
+    def refute(cube)
+      client = described_class.new(url: dead_url, handle: "spec", proofs: @proofs)
+
+      client.send(:solve_cube, { cnf_path: contradiction, cube: })
+    end
+
+    it "returns unsat with the digest and size of a real proof" do
+      verdict, payload = refute([])
+
+      expect(verdict).to eq("unsat")
+      expect(payload[:proof][:sha256]).to match(/\A[0-9a-f]{64}\z/)
+      expect(payload[:proof][:bytes]).to be_positive
+    end
+
+    it "keeps the proof under its own digest, so it can be handed over later" do
+      _verdict, payload = refute([])
+      kept = File.join(@proofs, "#{payload[:proof][:sha256]}.drat")
+
+      expect(File.size(kept)).to eq(payload[:proof][:bytes])
+      expect(Digest::SHA256.file(kept).hexdigest).to eq(payload[:proof][:sha256])
+    end
+
+    # The coordinator is the one that decides, so what the client returns has
+    # to be the thing the coordinator accepts.
+    it "returns a payload the coordinator will accept" do
+      _verdict, payload = refute([])
+
+      expect(Census::AtHome::SubmissionGuard.new(payload:, verdict: "unsat").rejection).to be_nil
+    end
+  end
 end

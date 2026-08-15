@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "json"
 require "net/http"
+require "tempfile"
 require "uri"
 
 module Census
@@ -28,13 +30,20 @@ module Census
       TOO_MANY_REQUESTS = 429
       SERVER_ERROR_FLOOR = 500
 
-      def initialize(url:, handle:, display_name: nil, contact: nil, report: nil, give_up_after: nil)
+      # Where refutations are kept. A proof is named by its own digest, so the
+      # same refutation written twice lands on the same file, and the
+      # coordinator can ask for one by the hash it was told.
+      DEFAULT_PROOFS = "proofs"
+
+      def initialize(url:, handle:, display_name: nil, contact: nil, report: nil, give_up_after: nil,
+                     proofs: DEFAULT_PROOFS)
         @base = URI(url)
         @handle = handle
         @display_name = display_name
         @contact = contact
         @report = report
         @give_up_after = give_up_after
+        @proofs = proofs
         @client_id = nil
       end
 
@@ -83,7 +92,7 @@ module Census
 
       private
 
-      attr_reader :base, :client_id, :contact, :display_name, :give_up_after, :handle, :report
+      attr_reader :base, :client_id, :contact, :display_name, :give_up_after, :handle, :proofs, :report
 
       def solve(unit)
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -105,9 +114,26 @@ module Census
         ["tiler", { certificate: }]
       end
 
+      # A refutation is only worth its proof, so one is always written. On SAT
+      # the proof is meaningless and goes away with the tempfile; on UNSAT it is
+      # kept under its own digest and that digest is what gets reported.
       def solve_cube(unit)
-        model = SAT::Kissat.solve_cube(cnf_path: unit[:cnf_path], cube: unit[:cube])
-        model ? ["sat", { model: model.to_a }] : ["unsat", { cube: unit[:cube] }]
+        Tempfile.create(["census", ".drat"]) do |file|
+          model = SAT::Kissat.solve_cube(cnf_path: unit[:cnf_path], cube: unit[:cube], proof_path: file.path)
+          return ["sat", { model: model.to_a }] if model
+
+          ["unsat", { cube: unit[:cube], proof: kept(SAT::Proof.of(file.path)).to_h }]
+        end
+      end
+
+      # Move the proof to its content-addressed home. Rename is atomic, so the
+      # coordinator can never be told a digest for a file that is half written.
+      def kept(proof)
+        FileUtils.mkdir_p(proofs)
+        destination = File.join(proofs, "#{proof.sha256}.drat")
+        FileUtils.mv(proof.path, destination) unless File.exist?(destination)
+
+        SAT::Proof.of(destination)
       end
 
       # Retries while the coordinator is unreachable or unwell, and raises
