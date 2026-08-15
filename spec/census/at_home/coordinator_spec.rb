@@ -126,6 +126,44 @@ RSpec.describe Census::AtHome::Coordinator, :home do
     end
   end
 
+  # A volunteer is not on this machine, so a formula cannot be handed over as
+  # a path and expected to open.
+  describe "serving the formula behind a cube unit" do
+    let(:contradiction) { "spec/fixtures/proof/contradiction.cnf" }
+
+    def seed_cube(cnf_path: contradiction)
+      store.add_unit(kind: "cube", shape_id: "8/1309", payload: { cnf_path:, cnf_sha256: "abc", cube: [1] })
+    end
+
+    it "never tells a client where the formula lives on the coordinator" do
+      seed_cube
+      worker = coordinator.register(handle: "spec")
+
+      unit = coordinator.lease(client_id: worker[:id])
+
+      expect(unit).to include(cube: [1], cnf_sha256: "abc")
+      expect(unit).not_to have_key(:cnf_path)
+    end
+
+    it "serves the formula by unit id" do
+      id = seed_cube
+
+      expect(coordinator.formula_path(id)).to eq(contradiction)
+    end
+
+    it "serves nothing for a unit whose formula is gone" do
+      id = seed_cube(cnf_path: "/nonexistent.cnf")
+
+      expect(coordinator.formula_path(id)).to be_nil
+    end
+
+    it "serves nothing for a shape unit, which has no formula" do
+      seed_shape(straight)
+
+      expect(coordinator.formula_path(1)).to be_nil
+    end
+  end
+
   # The two-identity split only means something if a human can bridge it.
   describe "moderating a display name" do
     def volunteer = coordinator.register(handle: "client-laptop-3f9a", display_name: "Ada Lovelace")

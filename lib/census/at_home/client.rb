@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "fileutils"
 require "json"
 require "net/http"
@@ -35,8 +36,12 @@ module Census
       # coordinator can ask for one by the hash it was told.
       DEFAULT_PROOFS = "proofs"
 
+      # Where fetched formulas are cached, keyed by digest. Thousands of cube
+      # units can share one formula, so it is downloaded once and reused.
+      DEFAULT_FORMULAS = "formulas"
+
       def initialize(url:, handle:, display_name: nil, contact: nil, report: nil, give_up_after: nil,
-                     proofs: DEFAULT_PROOFS)
+                     proofs: DEFAULT_PROOFS, formulas: DEFAULT_FORMULAS)
         @base = URI(url)
         @handle = handle
         @display_name = display_name
@@ -44,6 +49,7 @@ module Census
         @report = report
         @give_up_after = give_up_after
         @proofs = proofs
+        @formulas = formulas
         @client_id = nil
       end
 
@@ -94,7 +100,8 @@ module Census
 
       private
 
-      attr_reader :base, :client_id, :contact, :display_name, :give_up_after, :handle, :proofs, :report
+      attr_reader :base, :client_id, :contact, :display_name, :formulas, :give_up_after, :handle, :proofs,
+                  :report
 
       def solve(unit)
         started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -120,12 +127,37 @@ module Census
       # the proof is meaningless and goes away with the tempfile; on UNSAT it is
       # kept under its own digest and that digest is what gets reported.
       def solve_cube(unit)
+        cnf_path = formula_for(unit)
+        return ["error", { note: "formula unavailable" }] unless cnf_path
+
         Tempfile.create(["census", ".drat"]) do |file|
-          model = SAT::Kissat.solve_cube(cnf_path: unit[:cnf_path], cube: unit[:cube], proof_path: file.path)
+          model = SAT::Kissat.solve_cube(cnf_path:, cube: unit[:cube], proof_path: file.path)
           return ["sat", { model: model.to_a }] if model
 
           ["unsat", { cube: unit[:cube], proof: kept(SAT::Proof.of(file.path)).to_h }]
         end
+      end
+
+      # The formula lives on the coordinator, not here. Fetched once per
+      # formula and cached by digest, because a shape split into thousands of
+      # cubes hands out thousands of units that all refer to the same one.
+      def formula_for(unit)
+        digest = unit[:cnf_sha256]
+        cached = File.join(formulas, "#{digest || "unit-#{unit[:id]}"}.cnf")
+        return cached if File.exist?(cached)
+
+        bytes = fetch("/cnf/#{unit[:id]}")
+        return nil unless bytes
+
+        if digest && Digest::SHA256.hexdigest(bytes) != digest
+          report&.call("formula for unit #{unit[:id]} does not match its digest")
+          return nil
+        end
+
+        FileUtils.mkdir_p(formulas)
+        File.binwrite(cached, bytes)
+
+        cached
       end
 
       # Move the proof to its content-addressed home. Rename is atomic, so the
@@ -189,6 +221,37 @@ module Census
           attempt += 1
           retry
         end
+      end
+
+      # Retried like everything else, since a formula download is the one part
+      # of a lease a volunteer cannot work around by trying again later.
+      def fetch(path)
+        waited = 0
+        attempt = 0
+        begin
+          get(path)
+        rescue *TRANSIENT_ERRORS, TransientResponse => error
+          delay = RETRY_DELAYS[[attempt, RETRY_DELAYS.size - 1].min]
+          if give_up_after && waited + delay > give_up_after
+            report&.call("could not fetch #{path} after #{waited}s (#{error.class})")
+            return nil
+          end
+
+          sleep(delay)
+          waited += delay
+          attempt += 1
+          retry
+        end
+      end
+
+      def get(path)
+        request = Net::HTTP::Get.new(URI.join(base, path))
+        response = Net::HTTP.start(base.host, base.port, read_timeout: 300, open_timeout: 30) { it.request(request) }
+        status = response.code.to_i
+        raise TransientResponse, "HTTP #{status}" if status == TOO_MANY_REQUESTS || status >= SERVER_ERROR_FLOOR
+        return nil unless status == 200
+
+        response.body
       end
 
       def exchange(path, body, content_type)

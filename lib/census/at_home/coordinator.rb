@@ -37,7 +37,20 @@ module Census
         unit = store.lease_unit(client_id:, seconds: lease_seconds)
         return nil unless unit
 
-        { id: unit[:id], kind: unit[:kind], shape_id: unit[:shape_id] }.merge(unit[:payload])
+        { id: unit[:id], kind: unit[:kind], shape_id: unit[:shape_id] }.merge(presented(unit[:payload]))
+      end
+
+      # The formula behind a cube unit, by unit id.
+      #
+      # A volunteer is not on this coordinator's filesystem, so a cube unit
+      # cannot name its formula by path and expect anyone to open it. Only
+      # paths this coordinator recorded when it made the unit are served.
+      def formula_path(unit_id)
+        unit = store.unit(unit_id)
+        return nil unless unit && unit[:kind] == "cube"
+
+        path = unit[:payload][:cnf_path]
+        path if path && File.exist?(path)
       end
 
       # verdicts: "tiler" (certificate attached), "exhausted" (budgets spent),
@@ -98,6 +111,11 @@ module Census
       attr_reader :lease_seconds, :proofs, :store
 
       def refusal(note) = { accepted: false, note: }
+
+      # A local filesystem path means nothing to a volunteer and tells them
+      # about a machine they have no business knowing. They fetch the formula
+      # by unit id instead, and check it against the digest they were given.
+      def presented(payload) = payload.except(:cnf_path)
 
       # Rebuild the exact formula the proof claims to refute, from the base CNF
       # and the cube this coordinator handed out, then let drat-trim decide.

@@ -3,6 +3,7 @@ PLAN_*.md
 STOP
 .DS_Store
 experiments/
+formulas/
 proofs/
 vendor/
 whitepapers--readlater/

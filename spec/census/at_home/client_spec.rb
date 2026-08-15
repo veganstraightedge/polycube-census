@@ -45,15 +45,25 @@ RSpec.describe Census::AtHome::Client do
 
   describe "refuting a cube" do
     let(:contradiction) { "spec/fixtures/proof/contradiction.cnf" }
+    let(:digest)        { Digest::SHA256.file(contradiction).hexdigest }
 
+    # The formula is already cached, which is why these run against a dead
+    # coordinator: a volunteer holding the formula needs nothing from it until
+    # there is an answer to report.
     around do |example|
-      Dir.mktmpdir { |dir| @proofs = dir and example.run }
+      Dir.mktmpdir do |dir|
+        @proofs = File.join(dir, "proofs")
+        @formulas = File.join(dir, "formulas")
+        FileUtils.mkdir_p(@formulas)
+        FileUtils.cp(contradiction, File.join(@formulas, "#{digest}.cnf"))
+        example.run
+      end
     end
 
     def refute(cube)
-      client = described_class.new(url: dead_url, handle: "spec", proofs: @proofs)
+      client = described_class.new(url: dead_url, handle: "spec", proofs: @proofs, formulas: @formulas)
 
-      client.send(:solve_cube, { cnf_path: contradiction, cube: })
+      client.send(:solve_cube, { id: 1, cnf_sha256: digest, cube: })
     end
 
     it "returns unsat with the digest and size of a real proof" do

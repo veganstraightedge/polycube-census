@@ -45,6 +45,7 @@ module Census
       # Responses this API can give. Named so the reader never has to
       # remember which number means what.
       BAD_REQUEST = 400
+      NOT_FOUND = 404
       PAYLOAD_TOO_LARGE = 413
       TOO_MANY_REQUESTS = 429
 
@@ -128,6 +129,17 @@ module Census
                                 verdict: String(require_field(body, :verdict)),
                                 payload: body[:payload] || {},
                                 seconds: body[:seconds]))
+      end
+
+      # The formula a cube unit refers to. Streamed rather than read into
+      # memory: these run to megabytes, and many volunteers may want the same
+      # one at once. Cacheable forever, since a formula never changes.
+      get "/cnf/:unit_id" do
+        path = coordinator.formula_path(Integer(params[:unit_id]))
+        halt(NOT_FOUND, json(error: "no formula for that unit")) unless path
+
+        cache_control :public, max_age: 31_536_000
+        send_file path, type: "text/plain"
       end
 
       get "/status" do
