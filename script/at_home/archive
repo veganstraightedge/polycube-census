@@ -1,52 +1,115 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# LOCKSS pass: move verified results out of the coordinator database into
-# plaintext files under data/, then (optionally) commit and push them.
+# Move verified results out of the coordinator database into data/
+# Usage:
 #
-#   script/at_home/archive                 # write files only
-#   script/at_home/archive --commit        # write, then commit
-#   script/at_home/archive --commit --push # write, commit, push (pull-rebase first)
+#   script/at_home/archive
 #
-# Safe to run on a schedule (cron, Heroku Scheduler, systemd timer) and safe
-# to interrupt: it compares the database against data/ each run rather than
-# tracking what it has already done, so nothing is lost by a failed run and
-# nothing is written twice by a repeated one.
+# Options.
+# Each has a default, so all are optional.
 #
-# Every certificate is re-verified here — the third independent check after
-# the worker and the coordinator — so a compromised coordinator still cannot
-# put a false claim into the archive.
+#   --commit                  commit the files it wrote
+#                               default: write files, commit nothing
+#   --push                    pull, rebase, and push after committing
+#                               default: no push
+#                               ignored without --commit
+#
+# Postgres holds scheduling state and is meant to be disposable.
+# The archive under data/ is the durable copy, in plaintext, in git.
+# So this runs on a schedule and keeps the two in step.
+#
+# Safe to interrupt and safe to repeat.
+# Each run compares the database against data/ instead of tracking its own
+# progress, so a failed run loses nothing and a repeated run writes nothing twice.
+#
+# Every certificate is verified again here.
+# That is the third check, after the client and the coordinator.
+# A coordinator that went bad after accepting a result still cannot put a
+# false claim into the archive.
+#
+# Examples:
+#
+#   script/at_home/archive
+#   script/at_home/archive --commit
+#   script/at_home/archive --commit --push
 
-require_relative "../../lib/census"
+require_relative '../../lib/census'
 
-commit = ARGV.include?("--commit")
-push = ARGV.include?("--push")
-root = File.expand_path("../../data", __dir__)
+# Read options
+arguments = ARGV.dup
 
-store = Census::AtHome::Store.new
-promoter = Census::AtHome::Archiver.new(store:, root:, report: ->(line) { puts line })
-written = promoter.promote
+def flag? arguments, flag
+  position = arguments.index flag
+  return false if position.nil?
+
+  arguments.delete_at position
+
+  true
+end
+
+def check_for_unknown_options arguments
+  return if arguments.empty?
+
+  abort "unknown option(s): #{arguments.join ' '}"
+end
+
+def root       = File.expand_path '../../data', __dir__
+def repository = File.expand_path '../..', __dir__
+
+def commit_message archived_shapes
+  "@home: #{archived_shapes.size} verified certificate(s) archived to data/"
+end
+
+def commit archived_shapes
+  Dir.chdir repository do
+    paths = archived_shapes.map { "data/#{it}/shape.json" }
+
+    system 'git', 'add',    '--', *paths,                                exception: true
+    system 'git', 'commit', '-q', '-m', commit_message(archived_shapes), exception: true
+
+    puts "committed: #{commit_message archived_shapes}"
+  end
+end
+
+# Rebase before pushing
+# A scheduled archive run should never fight a human committing from a laptop
+def push_to_origin
+  Dir.chdir repository do
+    system 'git', 'pull', '--rebase', '--quiet', exception: true
+    system 'git', 'push', '--quiet',             exception: true
+
+    puts 'pushed'
+  end
+end
+
+# Extract options
+committing = flag? arguments, '--commit'
+pushing    = flag? arguments, '--push'
+
+# Check options
+check_for_unknown_options arguments
+
+# Write whatever the coordinator server knows and data/ does not
+store           = Census::AtHome::Store.new
+archiver        = Census::AtHome::Archiver.new store:,
+                                               root:,
+                                               report: ->(line) { puts line }
+archived_shapes = archiver.archive
 store.close
 
-if written.empty?
-  puts "nothing to promote"
+if archived_shapes.empty?
+  puts 'nothing to archive'
+  puts
+
   exit
 end
 
-puts "promoted #{written.size} shape record(s)"
-exit unless commit
+puts "archived #{archived_shapes.size} shape record(s)"
 
-Dir.chdir(File.expand_path("../..", __dir__)) do
-  system("git", "add", "--", *written.map { "data/#{it}/shape.json" }, exception: true)
-  message = "@home: #{written.size} verified certificate(s) promoted to data/"
-  system("git", "commit", "-q", "-m", message, exception: true)
-  puts "committed: #{message}"
-
-  next unless push
-
-  # Rebase before pushing so a coordinator running on a schedule never
-  # fights a human committing from a laptop.
-  system("git", "pull", "--rebase", "--quiet", exception: true)
-  system("git", "push", "--quiet", exception: true)
-  puts "pushed"
+if committing
+  commit archived_shapes
+  push_to_origin if pushing
 end
+
+puts

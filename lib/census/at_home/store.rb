@@ -137,7 +137,7 @@ module Census
       end
 
       # Verified shape results with their credit strings resolved — the
-      # promoter's view. Unapproved display names fall back to the handle,
+      # archiver's view. Unapproved display names fall back to the handle,
       # so nothing unmoderated can reach data/.
       def accepted_shape_results
         rows = synchronize do |connection|

@@ -21,7 +21,7 @@ module Census
 
       # Returns the shape ids written. Verifies every certificate a third
       # time (worker → coordinator → here) before it reaches the archive.
-      def promote
+      def archive
         written = []
         store.accepted_shape_results.each do |result|
           path = File.join(root, result[:shape_id], "shape.json")

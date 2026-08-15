@@ -28,7 +28,7 @@ RSpec.describe Census::AtHome::Archiver, :home do
   it "writes a verified result into data/ as a stamped record" do
     Dir.mktmpdir do |root|
       solved_unit(root)
-      expect(described_class.new(store:, root:).promote).to eq(["3/1"])
+      expect(described_class.new(store:, root:).archive).to eq(["3/1"])
 
       record = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
       expect(record[:verdict]).to eq("tiler")
@@ -39,7 +39,7 @@ RSpec.describe Census::AtHome::Archiver, :home do
   it "credits the opaque handle when a display name is not approved" do
     Dir.mktmpdir do |root|
       solved_unit(root, handle: "client-7f3a", display_name: "unapproved name")
-      described_class.new(store:, root:).promote
+      described_class.new(store:, root:).archive
       record = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
       expect(record.dig(:credits, :solved_by)).to include("client-7f3a")
     end
@@ -49,7 +49,7 @@ RSpec.describe Census::AtHome::Archiver, :home do
     Dir.mktmpdir do |root|
       worker = solved_unit(root, handle: "client-7f3a", display_name: "Ada Lovelace")
       store.approve_display_name(worker[:id])
-      described_class.new(store:, root:).promote
+      described_class.new(store:, root:).archive
       record = JSON.parse(File.read(File.join(root, "3/1/shape.json")), symbolize_names: true)
       expect(record.dig(:credits, :solved_by)).to include("Ada Lovelace")
     end
@@ -58,9 +58,9 @@ RSpec.describe Census::AtHome::Archiver, :home do
   it "is idempotent: a second pass writes nothing" do
     Dir.mktmpdir do |root|
       solved_unit(root)
-      promoter = described_class.new(store:, root:)
-      promoter.promote
-      expect(promoter.promote).to be_empty
+      archiver = described_class.new(store:, root:)
+      archiver.archive
+      expect(archiver.archive).to be_empty
     end
   end
 
@@ -73,7 +73,7 @@ RSpec.describe Census::AtHome::Archiver, :home do
       end
 
       notes = []
-      expect(described_class.new(store:, root:, report: ->(line) { notes << line }).promote).to be_empty
+      expect(described_class.new(store:, root:, report: ->(line) { notes << line }).archive).to be_empty
       expect(notes.first).to match(/REFUSED/)
     end
   end

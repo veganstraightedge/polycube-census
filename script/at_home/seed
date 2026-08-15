@@ -1,57 +1,110 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Fill the coordinator's queue with shape units drawn from data/.
+# Fill the coordinator server's queue with shape units from data/
+# Usage:
 #
-#   script/at_home/seed 5                    # every shape with n=5
-#   script/at_home/seed 5 --limit 10         # the first 10 of them
-#   script/at_home/seed 9 --unresolved       # only shapes still lacking a verdict
+#   script/at_home/seed N
 #
-# Seeding a solved size is the point during a shakedown: the coordinator
-# re-verifies whatever comes back, so the run is a end-to-end test against
-# answers we already trust.
+# Arguments.
+#
+#   N                         cube count to seed
+#                               5 seeds every pentacube, 9 every nonacube
+#
+# Options.
+# Each has a default, so all are optional.
+#
+#   --limit COUNT             seed only the first COUNT shapes
+#                               default: every shape of that size
+#   --unresolved              seed only shapes that still lack a verdict
+#                               default: seed them all
+#
+# Seeding an already solved size is the point during a shakedown.
+# The coordinator re-verifies whatever comes back.
+# So the run becomes an end-to-end test against answers we already trust.
+#
+# Examples:
+#
+#   script/at_home/seed 5
+#   script/at_home/seed 5 --limit 10
+#   script/at_home/seed 9 --unresolved
 
-require_relative "../../lib/census"
+require_relative '../../lib/census'
 
+# Read options
 arguments = ARGV.dup
 
-def option(arguments, flag, default)
-  return default unless (position = arguments.index(flag))
+def option arguments, flag, default
+  position = arguments.index flag
+  return default if position.nil?
 
-  arguments.delete_at(position)
-  arguments.delete_at(position)
+  arguments.slice!(position, 2).last
 end
 
-def flag?(arguments, flag)
-  return false unless (position = arguments.index(flag))
+def flag? arguments, flag
+  position = arguments.index flag
+  return false if position.nil?
 
-  arguments.delete_at(position)
+  arguments.delete_at position
+
   true
 end
 
-limit = option(arguments, "--limit", nil)&.then { Integer(it) }
-unresolved_only = flag?(arguments, "--unresolved")
-size = Integer(arguments.fetch(0))
-root = File.expand_path("../../data", __dir__)
+def check_for_unknown_options arguments
+  return if arguments.empty?
 
-paths = Dir.glob(File.join(root, size.to_s, "*", "shape.json"))
-           .sort_by { Integer(File.basename(File.dirname(it))) }
-records = paths.map { JSON.parse(File.read(it), symbolize_names: true) }
-records.select! { it[:verdict].nil? } if unresolved_only
-records = records.first(limit) if limit
-
-store = Census::AtHome::Store.new
-seeded = records.count do |record|
-  store.add_unit(
-    kind: "shape",
-    shape_id: record[:id],
-    payload: {
-      cells: record[:cells],
-      budgets: { box_max_volume: Census::BoxSearch::DEFAULT_MAX_VOLUME,
-                 torus_max_index: Census::TorusSearch::DEFAULT_MAX_INDEX }
-    }
-  )
+  abort "unknown option(s): #{arguments.join ' '}"
 end
 
-puts "seeded #{seeded} shape units (n=#{size}#{unresolved_only ? ', unresolved only' : ''})"
+def root  = File.expand_path '../../data', __dir__
+def usage = abort 'usage: script/at_home/seed N [--limit COUNT] [--unresolved]'
+
+def budgets
+  {
+    box_max_volume:  Census::BoxSearch::DEFAULT_MAX_VOLUME,
+    torus_max_index: Census::TorusSearch::DEFAULT_MAX_INDEX
+  }
+end
+
+# Shapes of one size, in census order
+def records_of_size size
+  paths = Dir.glob File.join(root, size.to_s, '*', 'shape.json')
+
+  paths.sort_by { Integer File.basename(File.dirname(it)) }
+       .map     { JSON.parse File.read(it), symbolize_names: true }
+end
+
+# Extract options
+limit       = option(arguments, '--limit', nil)&.then { Integer it }
+unresolved  = flag?  arguments, '--unresolved'
+size        = arguments.shift
+
+# Check options
+usage if size.nil?
+check_for_unknown_options arguments
+
+# Choose shapes
+records = records_of_size Integer(size)
+records = records.select { it[:verdict].nil? } if unresolved
+records = records.first limit                  if limit
+
+# Queue them
+# add_unit ignores duplicates, so re-seeding is safe
+store = Census::AtHome::Store.new
+
+seeded = records.count do |record|
+  store.add_unit kind:     'shape',
+                 shape_id: record[:id],
+                 payload:  {
+                   cells:  record[:cells],
+                   budgets:
+                 }
+end
+
+filter = unresolved ? ', unresolved only' : ''
+
+puts "seeded #{seeded} shape units (n=#{size}#{filter})"
 puts store.status.inspect
+puts
+
+store.close

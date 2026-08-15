@@ -50,7 +50,7 @@ The reason to build this on day one rather than retrofit it: volunteer credit is
 
 Postgres holds scheduling state — leases, queues, worker profiles. It is deliberately _disposable_: if it dies we lose in-flight leases and nothing else, because `script/at_home/archive` has been moving every verified result into plaintext files under `data/` all along, where git (and S3, for the big pieces) keep the copies that matter. The dependency runs one way: the database is reconstructible from the archive (`script/at_home/seed`), the archive is not reconstructible from the database.
 
-The promoter is idempotent by comparison rather than bookkeeping — each run asks "what does the coordinator know that `data/` doesn't?" — so an interrupted run loses nothing and a repeated run writes nothing twice. It re-verifies every certificate before writing, the third independent check after the worker and the coordinator: a coordinator compromised _after_ accepting a result still cannot put a false claim into the archive (there is a spec for exactly that).
+The archiver is idempotent by comparison rather than bookkeeping — each run asks "what does the coordinator know that `data/` doesn't?" — so an interrupted run loses nothing and a repeated run writes nothing twice. It re-verifies every certificate before writing, the third independent check after the worker and the coordinator: a coordinator compromised _after_ accepting a result still cannot put a false claim into the archive (there is a spec for exactly that).
 
     script/at_home/archive                  # write files
     script/at_home/archive --commit --push  # write, commit, pull-rebase, push

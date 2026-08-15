@@ -31,7 +31,7 @@ schema = File.expand_path '../../db/at_home.sql', __dir__
     store.reset
   end
 
-  puts 'ready: #{database_url}  #{store.status[:units].inspect}'
+  puts "ready: #{database_url}  #{store.status[:units].inspect}"
   puts
 
   store.close
