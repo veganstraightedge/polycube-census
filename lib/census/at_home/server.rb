@@ -51,6 +51,12 @@ module Census
         set :raise_errors, false
         set :logging, false
         disable :protection
+
+        # Volunteers reach this by IP or whatever hostname the deployment
+        # answers to, so host authorization is off by default — Sinatra 4
+        # would otherwise 403 every remote client in production. Set
+        # AT_HOME_HOSTS to a comma-separated list to restrict it.
+        set :host_authorization, { permitted_hosts: ENV.fetch("AT_HOME_HOSTS", "").split(",") }
       end
 
       use Rack::Attack
@@ -71,7 +77,7 @@ module Census
 
       post "/register" do
         body = parse_body
-        json(worker: coordinator.register(handle: require_field(body, :handle),
+        json(client: coordinator.register(handle: require_field(body, :handle),
                                           display_name: body[:display_name],
                                           contact: body[:contact]))
       end

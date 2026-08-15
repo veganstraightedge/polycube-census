@@ -20,7 +20,7 @@ module Census
       end
 
       def register
-        @client_id = post("/register", { handle:, display_name:, contact: })[:worker][:id]
+        @client_id = post("/register", { handle:, display_name:, contact: })[:client][:id]
       end
 
       # Runs until the queue is empty (or limit units are done). Returns a
