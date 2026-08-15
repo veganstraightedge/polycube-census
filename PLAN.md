@@ -193,7 +193,7 @@ Still open from the original plan, both feeding the paper:
 
 The census will outlive any one person's accounts, so identity decisions are made once, early, and with an eye to what a paper can cite permanently.
 
-- **Domain: `polycubes.org`** — the subject noun is what people search and cite; `.org` for non-commercial science. Register `polycubing.org` alongside it as a redirect so the org name, the program name, and the gerund all land in the right place.
+- **Domain: [`polycubes.org`](https://polycubes.org)** — registered 2026-08-15. The subject noun is what people search and cite; `.org` for non-commercial science. Still worth registering `polycubing.org` as a redirect so the org name, the program name, and the gerund all land in the right place.
 - **GitHub org: [`polycubing`](https://github.com/polycubing)** — acquired. Contributor-facing infrastructure: `polycubing/census` (data + pipeline), the @home coordinator and clients, the site. (`polycubes` is taken by an apparently-dormant org; not worth banking on.)
 - **Crowdsourced compute program: Polycubing@home** — Folding@home's grammar, the activity as a gerund, matching the org name. The subject is polycubes; the activity is polycubing; the volunteer program is where the two meet.
 - **Citation rule: the paper cites `polycubes.org`, never a `github.com` URL.** A domain we control keeps hosting, org naming, and even the choice of forge reversible forever; a printed GitHub URL does not.
