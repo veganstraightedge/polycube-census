@@ -17,46 +17,62 @@ module Census
   class JSONDocument
     INDENT = 2
 
+    # Hashes wider than this break onto their own lines. Certificates and the
+    # prior_art in credits are the ones that reach it. Lines can still exceed it
+    # where the content is a single long string, since JSON cannot wrap those.
+    WIDTH = 100
+
     def initialize(hash)
       @hash = hash
     end
 
     def generate
-      fields = hash.map { |key, value| %(#{" " * INDENT}"#{key}": #{render(value, indent: INDENT)}) }
+      pairs = hash.map { |key, value| pair_of(key, value, indent: INDENT) }
 
-      "{\n#{fields.join(",\n")}\n}\n"
+      "{\n#{pairs.map { "#{" " * INDENT}#{it}" }.join(",\n")}\n}\n"
     end
 
     private
 
     attr_reader :hash
 
-    def render(value, indent:)
+    # A key and its value, plus the column its value starts in, so the value can
+    # tell whether it fits on the rest of the line.
+    def pair_of(key, value, indent:)
+      label = %("#{key}": )
+
+      "#{label}#{render(value, indent:, used: indent + label.length)}"
+    end
+
+    def render(value, indent:, used:)
       case value
       when Array then array_of(value, indent:)
-      when Hash  then hash_of(value, indent:)
+      when Hash  then hash_of(value, indent:, used:)
       else            JSON.generate(value)
       end
     end
 
-    # Sorted keys, spaces inside the braces. Breaks onto its own lines only when
-    # a child broke, so a hash is never half inline and half stacked.
-    def hash_of(value, indent:)
+    # Sorted keys, spaces inside the braces. Breaks when it would overflow the
+    # line, or when a child already broke, so a hash is never half inline and
+    # half stacked.
+    def hash_of(value, indent:, used:)
       return "{}" if value.empty?
 
-      pairs = value.keys.sort_by(&:to_s).map { %("#{it}": #{render(value[it], indent: indent + INDENT)}) }
-      return "{ #{pairs.join(", ")} }" unless pairs.any? { multiline?(it) }
+      pairs  = value.keys.sort_by(&:to_s).map { pair_of(it, value[it], indent: indent + INDENT) }
+      inline = "{ #{pairs.join(", ")} }"
+      return inline unless used + inline.length > WIDTH || pairs.any? { multiline?(it) }
 
       stacked(pairs, close: "}", indent:, open: "{")
     end
 
     # Arrays of hashes always break, one element per line, because that is where
     # the long lines come from: placements, coronas, witnesses. Arrays of
-    # anything else stay inline, so cells keep reading as a list of coordinates.
+    # anything else stay inline at any width, so cells keep reading as a list of
+    # coordinates rather than as a column of digits.
     def array_of(value, indent:)
       return "[]" if value.empty?
 
-      items = value.map { render(it, indent: indent + INDENT) }
+      items = value.map { render(it, indent: indent + INDENT, used: indent + INDENT) }
       return "[#{items.join(", ")}]" unless value.all?(Hash) || items.any? { multiline?(it) }
 
       stacked(items, close: "]", indent:, open: "[")

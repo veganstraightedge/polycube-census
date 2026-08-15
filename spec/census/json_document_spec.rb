@@ -51,6 +51,28 @@ RSpec.describe Census::JSONDocument do
     JSON
   end
 
+  it "breaks a hash that would overflow the line, even when no child broke" do
+    credits = { solved_by: "polycube-census v0.1.0 (mirrored from 9/42947)", verified_by: nil, prior_art: nil }
+
+    expect(generate(credits:)).to eq(<<~JSON)
+      {
+        "credits": {
+          "prior_art": null,
+          "solved_by": "polycube-census v0.1.0 (mirrored from 9/42947)",
+          "verified_by": null
+        }
+      }
+    JSON
+  end
+
+  # Width breaks hashes only. A nonacube's cells overflow and stay put, because
+  # a column of single digits is worse than a long line of coordinates.
+  it "keeps an overflowing array of non-hashes inline" do
+    cells = [[0, 0, 1], [0, 1, 0], [0, 1, 1], [0, 1, 2], [1, 0, 1], [1, 0, 2], [1, 1, 2], [1, 2, 2], [2, 0, 1]]
+
+    expect(generate(cells:).lines.count).to eq(3)
+  end
+
   it "renders empty containers without stray whitespace" do
     expect(generate(budgets: {}, cells: [])).to include(%("budgets": {}), %("cells": []))
   end
