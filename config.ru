@@ -2,11 +2,15 @@
 
 # Rack entry point for the polycubing@home coordinator.
 #
-#   bundle exec puma -C config/puma.rb    (or script/at_home/server)
+#   bundle exec puma -C config/puma.rb
+#   # or:
+#   script/at_home/server
 #
-# The connection pool is sized to the server's thread count so a saturated
-# server never waits on connections: set AT_HOME_THREADS once and both
-# follow it.
+# The connection pool is sized to the server's thread count
+# so that a saturated server never waits on connections.
+# Both the connection pool and the web server use the AT_HOME_THREADS.
+# To change the thread count and connection pool size:
+#     set AT_HOME_THREADS ENV variable and restart the server.
 
 require_relative "lib/census"
 
