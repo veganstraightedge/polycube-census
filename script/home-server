@@ -1,21 +1,42 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# The polycubing@home coordinator. Usage: script/home-server [--port 9292]
+# The polycubing@home coordinator (Sinatra on Puma).
+#
+#   script/home-server [--port 9292] [--threads 16]
 #
 # Database: $POLYCUBE_HOME_URL, default postgres:///polycube_home
 # Create it once with: script/home-setup
+#
+# Deployment note: terminate TLS and apply crude flood protection at a
+# reverse proxy; this process handles application-level limits only.
 
 require_relative "../lib/census"
+require "puma"
+require "puma/configuration"
+require "puma/launcher"
 
 arguments = ARGV.dup
-port = if (position = arguments.index("--port"))
-         arguments.delete_at(position)
-         Integer(arguments.delete_at(position))
-       else
-         9292
-       end
 
-store = Census::Home::Store.new
-coordinator = Census::Home::Coordinator.new(store:)
-Census::Home::Server.new(coordinator:, port:, logger: $stdout).start
+def option(arguments, flag, default)
+  return default unless (position = arguments.index(flag))
+
+  arguments.delete_at(position)
+  arguments.delete_at(position)
+end
+
+port = Integer(option(arguments, "--port", "9292"))
+threads = Integer(option(arguments, "--threads", "16"))
+
+store = Census::Home::Store.new(pool_size: threads)
+Census::Home::Server.coordinator = Census::Home::Coordinator.new(store:)
+
+configuration = Puma::Configuration.new do |config|
+  config.bind("tcp://0.0.0.0:#{port}")
+  config.threads(1, threads)
+  config.app(Census::Home::Server)
+  config.log_requests(false)
+end
+
+puts "polycubing@home coordinator on port #{port} (#{threads} threads)"
+Puma::Launcher.new(configuration).run

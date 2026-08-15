@@ -48,6 +48,10 @@ module Census
       attr_reader :lease_seconds, :store
 
       def verify(unit:, verdict:, payload:)
+        if (reason = SubmissionGuard.new(payload:, verdict:).rejection)
+          return [false, "rejected before verification: #{reason}"]
+        end
+
         case verdict
         when "tiler" then verify_certificate(unit:, payload:)
         when "exhausted" then [true, "budgets accepted as reported"]

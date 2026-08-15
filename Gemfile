@@ -7,3 +7,6 @@ gem "rspec"
 
 gem "pg"
 gem "webrick"
+gem "puma"
+gem "rack-attack"
+gem "sinatra"
