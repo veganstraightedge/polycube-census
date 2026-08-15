@@ -136,6 +136,30 @@ module Census
         end
       end
 
+      # Verified shape results with their credit strings resolved — the
+      # promoter's view. Unapproved display names fall back to the handle,
+      # so nothing unmoderated can reach data/.
+      def accepted_shape_results
+        rows = synchronize do |connection|
+          connection.exec(<<~SQL)
+            SELECT DISTINCT ON (u.shape_id)
+                   u.shape_id, u.payload AS unit_payload, r.payload AS result_payload,
+                   CASE WHEN w.display_state = 'approved' AND w.display_name IS NOT NULL
+                        THEN w.display_name ELSE w.handle END AS credit
+              FROM results r
+              JOIN units u ON u.id = r.unit_id
+              JOIN workers w ON w.id = r.worker_id
+             WHERE r.verified IS TRUE AND r.verdict = 'tiler' AND u.kind = 'shape'
+             ORDER BY u.shape_id, r.created_at
+          SQL
+        end
+        rows.map do |row|
+          unit = JSON.parse(row["unit_payload"], symbolize_names: true)
+          result = JSON.parse(row["result_payload"], symbolize_names: true)
+          { shape_id: row["shape_id"], credit: row["credit"], certificate: result[:certificate], budgets: unit[:budgets] }
+        end
+      end
+
       def status
         synchronize do |connection|
           units = connection.exec("SELECT status, count(*) FROM units GROUP BY status").to_h { [it["status"], Integer(it["count"])] }
