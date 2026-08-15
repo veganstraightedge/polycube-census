@@ -126,6 +126,46 @@ RSpec.describe Census::AtHome::Coordinator, :home do
     end
   end
 
+  # The two-identity split only means something if a human can bridge it.
+  describe "moderating a display name" do
+    def volunteer = coordinator.register(handle: "client-laptop-3f9a", display_name: "Ada Lovelace")
+
+    it "credits by the opaque handle until a human approves the name" do
+      volunteer
+
+      expect(store.credit_string(volunteer[:id])).to eq("client-laptop-3f9a")
+    end
+
+    it "lists a name that is waiting" do
+      volunteer
+
+      expect(store.pending_display_names).to contain_exactly(hash_including(display_name: "Ada Lovelace",
+                                                                            handle: "client-laptop-3f9a"))
+    end
+
+    it "credits by the display name once approved" do
+      volunteer
+      store.moderate_display_name(handle: "client-laptop-3f9a", state: "approved")
+
+      expect(store.credit_string(volunteer[:id])).to eq("Ada Lovelace")
+    end
+
+    # Reversible on purpose: the archive is public and permanent, so a name
+    # can be withdrawn later without touching a single result.
+    it "falls back to the handle again when a name is rejected" do
+      volunteer
+      store.moderate_display_name(handle: "client-laptop-3f9a", state: "approved")
+      store.moderate_display_name(handle: "client-laptop-3f9a", state: "rejected")
+
+      expect(store.credit_string(volunteer[:id])).to eq("client-laptop-3f9a")
+      expect(store.pending_display_names).to be_empty
+    end
+
+    it "reports when no client has that handle, rather than silently doing nothing" do
+      expect(store.moderate_display_name(handle: "nobody", state: "approved")).to be_zero
+    end
+  end
+
   # The digest is a promise. This is the coordinator calling it in.
   describe "taking delivery of a proof" do
     let(:contradiction) { "spec/fixtures/proof/contradiction.cnf" }

@@ -57,6 +57,35 @@ module Census
         row["display_state"] == "approved" && row["display_name"] ? row["display_name"] : row["handle"]
       end
 
+      # Names waiting on a human. Until one is approved the volunteer is
+      # credited by their opaque handle, so this queue is the only thing
+      # standing between a contributor and a permanent citation in data/.
+      def pending_display_names
+        rows = synchronize do |connection|
+          connection.exec(<<~SQL)
+            SELECT handle, display_name, contact, accepted, rejected, first_seen
+              FROM clients
+             WHERE display_state = 'pending' AND display_name IS NOT NULL
+             ORDER BY first_seen
+          SQL
+        end
+
+        rows.map do
+          { accepted: Integer(it["accepted"]), contact: it["contact"], display_name: it["display_name"],
+            first_seen: it["first_seen"], handle: it["handle"], rejected: Integer(it["rejected"]) }
+        end
+      end
+
+      # Returns the number of clients changed, so a typo in a handle is caught
+      # by the caller rather than reported as a silent success.
+      def moderate_display_name(handle:, state:)
+        synchronize do |connection|
+          connection.exec_params(<<~SQL, [handle, state]).cmd_tuples
+            UPDATE clients SET display_state = $2 WHERE handle = $1
+          SQL
+        end
+      end
+
       def approve_display_name(client_id, approved: true)
         synchronize do |connection|
           connection.exec_params("UPDATE clients SET display_state = $2 WHERE id = $1",
