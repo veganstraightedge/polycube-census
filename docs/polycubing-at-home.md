@@ -10,13 +10,13 @@ Demonstrated: a worker submitting a forged certificate is rejected (`certificate
 
 ## The pieces
 
-| piece | file | what it does |
-| --- | --- | --- |
-| queue + state | `db/at_home.sql`, `lib/census/at_home/store.rb` | clients, units (shape or cube, nestable via `parent_id`), results; leases with expiry so a vanished worker costs one lease |
-| trust boundary | `lib/census/at_home/coordinator.rb` | leases units, verifies every submission, closes or requeues, credits the worker |
-| HTTP API | `lib/census/at_home/server.rb` | four endpoints, JSON, no framework: `/register`, `/lease`, `/results`, `/status` |
-| client | `lib/census/at_home/client.rb` | leases, solves locally (box/torus for shapes, kissat for cubes), submits, repeats |
-| durability | `lib/census/at_home/archiver.rb`, `script/at_home/archive` | moves verified results out of Postgres into plaintext `data/` files, commits, pushes |
+| piece          | file                                                       | what it does                                                                                                               |
+| -------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| queue + state  | `db/at_home.sql`, `lib/census/at_home/store.rb`            | clients, units (shape or cube, nestable via `parent_id`), results; leases with expiry so a vanished worker costs one lease |
+| trust boundary | `lib/census/at_home/coordinator.rb`                        | leases units, verifies every submission, closes or requeues, credits the worker                                            |
+| HTTP API       | `lib/census/at_home/server.rb`                             | four endpoints, JSON, no framework: `/register`, `/lease`, `/results`, `/status`                                           |
+| client         | `lib/census/at_home/client.rb`                             | leases, solves locally (box/torus for shapes, kissat for cubes), submits, repeats                                          |
+| durability     | `lib/census/at_home/archiver.rb`, `script/at_home/archive` | moves verified results out of Postgres into plaintext `data/` files, commits, pushes                                       |
 
 Scripts: `home-setup` (create databases), `home-seed` (fill the queue from `data/`), `home-server`, `home-worker`, `home-audit` (compare accepted results against the census's own answers).
 

@@ -142,15 +142,19 @@ module Census
       def accepted_shape_results
         rows = synchronize do |connection|
           connection.exec(<<~SQL)
-            SELECT DISTINCT ON (u.shape_id)
-                   u.shape_id, u.payload AS unit_payload, r.payload AS result_payload,
-                   CASE WHEN w.display_state = 'approved' AND w.display_name IS NOT NULL
-                        THEN w.display_name ELSE w.handle END AS credit
-              FROM results r
-              JOIN units u ON u.id = r.unit_id
-              JOIN clients w ON w.id = r.client_id
-             WHERE r.verified IS TRUE AND r.verdict = 'tiler' AND u.kind = 'shape'
-             ORDER BY u.shape_id, r.created_at
+            SELECT DISTINCT ON (units.shape_id)
+                   units.shape_id,
+                   units.payload AS unit_payload,
+                   results.payload AS result_payload,
+                   CASE WHEN clients.display_state = 'approved' AND clients.display_name IS NOT NULL
+                        THEN clients.display_name ELSE clients.handle END AS credit
+              FROM results
+                   JOIN units   ON units.id   = results.unit_id
+                   JOIN clients ON clients.id = results.client_id
+             WHERE results.verified IS TRUE
+               AND results.verdict = 'tiler'
+               AND units.kind = 'shape'
+             ORDER BY units.shape_id, results.created_at
           SQL
         end
         rows.map do |row|
