@@ -6,3 +6,9 @@ data/** linguist-generated=true
 # byte identical to everyone else. Without this, git would hand them CRLF and
 # every record they archived back would differ by line ending alone.
 data/** text eol=lf
+
+# Except DRAT proofs, which kissat writes in its binary format. Line-ending
+# normalization inside those bytes would corrupt the refutation, and a corrupt
+# proof is worse than no proof: it fails to check, and the shape it refutes
+# looks unproven when it isn't.
+*.drat -text
