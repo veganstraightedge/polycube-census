@@ -1,15 +1,22 @@
 {
   "id": "3/2",
   "n": 3,
-  "cells": [[0,0,0],[0,0,1],[0,1,0]],
+  "cells": [[0, 0, 0], [0, 0, 1], [0, 1, 0]],
   "symmetry_order": 2,
   "chiral": false,
   "mirror_id": "3/2",
   "verdict": "tiler",
   "tiles_rotations_only": true,
   "tiles_with_reflections": true,
-  "certificate": {"type":"box","box":[1,2,3],"placements":[{"rotation":2,"offset":[0,0,1]},{"rotation":3,"offset":[0,0,0]}]},
+  "certificate": {
+    "box": [1, 2, 3],
+    "placements": [
+      { "offset": [0, 0, 1], "rotation": 2 },
+      { "offset": [0, 0, 0], "rotation": 3 }
+    ],
+    "type": "box"
+  },
   "heesch": null,
-  "budgets": {"box_max_volume":96},
-  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null}
+  "budgets": { "box_max_volume": 96 },
+  "credits": { "prior_art": null, "solved_by": "polycube-census v0.1.0", "verified_by": null }
 }

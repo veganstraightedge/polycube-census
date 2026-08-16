@@ -1,7 +1,7 @@
 {
   "id": "9/2127",
   "n": 9,
-  "cells": [[0,0,0],[0,0,1],[0,0,2],[0,0,3],[0,1,0],[0,1,2],[0,2,0],[0,2,1],[0,3,0]],
+  "cells": [[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 0, 3], [0, 1, 0], [0, 1, 2], [0, 2, 0], [0, 2, 1], [0, 3, 0]],
   "symmetry_order": 2,
   "chiral": false,
   "mirror_id": "9/2127",
@@ -10,7 +10,7 @@
   "tiles_with_reflections": null,
   "certificate": null,
   "heesch": null,
-  "budgets": {"box_max_volume":128,"torus_max_index":72},
-  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null},
-  "reached": {"corona_sat":2}
+  "budgets": { "box_max_volume": 128, "torus_max_index": 72 },
+  "credits": { "prior_art": null, "solved_by": "polycube-census v0.1.0", "verified_by": null },
+  "reached": { "corona_sat": 2 }
 }

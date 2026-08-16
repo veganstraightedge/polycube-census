@@ -137,6 +137,10 @@ Index stability rule: within each n, shapes are numbered by the lexicographic or
 
 Schema semantics (2026-08-14 migration): **`budgets`** records the search limits a shape was given (box volume, torus index, corona depth attempted); **`reached`** records outcomes (`corona_sat: k` — a verified depth-k witness exists; `corona_refuted: k` — depth k proven impossible), so "we gave up here" and "we proved it here" can never be confused. Heesch certificates carry their convention and provenance inline: `adjacency: "26"` (D3's corona definition — the number is meaningless without it), `refutation_sha256` (checksum of the DRAT artifact, which may live outside git), and `solved_with` (solver + version + verification notes). The tiling booleans are tri-state: `true`/`false` are proven claims; `null` means undetermined within stated budgets.
 
+**TODO: declare what corona-3 cost on 9/2127.** Its `budgets` currently reads `{box_max_volume: 128, torus_max_index: 72}` and says nothing about corona depth, even though this section promises budgets record the "corona depth attempted". Meanwhile 128.4 hours of single-core kissat plus two colo solvers have gone into corona-3 without a verdict. An `open` verdict with no declared corona budget reads as a shrug rather than a stated limit, which is exactly the confusion `reached` and `budgets` were split up to prevent. Stamp it once the colo pair stops, not before, since they are still running.
+
+**TODO: say `computed` or `derived` outright.** A refutation is currently one of four kinds and the record only distinguishes them by prose. `8/1309` and `9/48258` are achiral and hold their own DRAT proof. `9/8219` computed one and `9/8220` points at the same artifact, both carrying the identical `refutation_sha256` (`3cc41ade…`), which works but is only legible because `8220`'s `refutation` string happens to begin with the word "mirror". `9/42947` and `9/42969` are a chiral pair backed by a cube-and-conquer ledger with no per-cube proofs at all. So six non-tilers rest on four independent computations, and which twin holds the trail is an accident of index order. Add a field naming the kind (`proof`, `mirror`, `ledger`) and whether this record `computed` its evidence or `derived` it from a sibling, so a reader counts four computations without parsing English. Related: nothing yet records that a checker actually ran, only that an artifact exists.
+
 Credits follow the [WHUTS](https://whuts.org) model: every verdict names its solver (a human, or the pipeline at a specific version) and, once someone independently rechecks it, its verifier. Where a shape was already settled by prior work — the 261 tesseract unfoldings on WHUTS, hand-found Poly Pages patterns — import the solution as a certificate, cross-check it, and credit the original solver with a link in `prior_art`.
 
 ## Verification
@@ -164,6 +168,8 @@ script/verify     # independently recheck every stored certificate
 script/gallery    # emit STLs and renders
 ```
 
+- **TODO: bring RuboCop back.** It was dropped early on and style passes have been manual since, checked against the suite and the generated output. That worked when the codebase was small. It now spans `lib/`, a dozen scripts, and the @home server and client, which is past the point where reading every file catches drift. Pin a config, run `rubocop -A` over the whole codebase once as its own commit, wire it into `script/test` and `script/cibuild`, and fix `script/test`'s header, which already claims to run a linter that isn't installed.
+
 ## Milestones
 
 - **M1 — Scaffold + enumerator.** Repo, canonical forms, enumeration through n=8, counts match A000162/A038119. Acceptance: `script/enumerate 8` reproduces OEIS.
@@ -188,6 +194,41 @@ Still open from the original plan, both feeding the paper:
 
 - **Pen-and-paper track.** Counting argument: one hole per ring, one donated cell per hole, and only the 4 edge-middle cells of a ring can sit in a hole (hand-checked; corners cannot). Target: a human-readable hole-cascade proof of corona-2 impossibility; even partial results are lemmas.
 - **Deeper literature pass** through puzzle literature before any write-up (passive only until comms open, per the scoop-risk policy below).
+
+## Names, addresses, and the public face (decided 2026-08-15)
+
+The census will outlive any one person's accounts, so identity decisions are made once, early, and with an eye to what a paper can cite permanently.
+
+- **Domain: [`polycubes.org`](https://polycubes.org)** — registered 2026-08-15. The subject noun is what people search and cite; `.org` for non-commercial science. Still worth registering `polycubing.org` as a redirect so the org name, the program name, and the gerund all land in the right place.
+- **GitHub org: [`polycubing`](https://github.com/polycubing)** — acquired. Contributor-facing infrastructure: `polycubing/census` (data + pipeline), the @home coordinator and clients, the site. (`polycubes` is taken by an apparently-dormant org; not worth banking on.)
+- **Crowdsourced compute program: Polycubing@home** — Folding@home's grammar, the activity as a gerund, matching the org name. The subject is polycubes; the activity is polycubing; the volunteer program is where the two meet.
+- **Citation rule: the paper cites `polycubes.org`, never a `github.com` URL.** A domain we control keeps hosting, org naming, and even the choice of forge reversible forever; a printed GitHub URL does not.
+
+### Site structure
+
+Shape ids _are_ paths — `9/2127` is already the citable name in `data/`, in the paper, and in conversation, so it addresses the page too. Never prefix it (`/shapes/9/2127`), never renumber.
+
+```
+/                      the census: what it is, the scoreboard
+/8                     octacubes index (per-n indexes, bare number)
+/9/2127                shape permalink — the id is the path
+/open                  the OPEN shortlist and the Heesch >= 2 club
+/heesch                the 3D Heesch table
+/verify                don't trust us, check us: clone, script/verify, drat-trim
+/data                  the dataset itself — structure, CC0, downloads, artifact manifest
+/at-home               Polycubing@home (canonical)
+/@home                 pretty alias, redirects to /at-home
+/at-home/volunteers    compute donors, generated from the coordinator's moderated display names
+/code                  links to the org and its repos
+/papers                published papers and pre-publication drafts
+/papers/<title-slug>   paper permalink; /papers/arxiv/<id> redirects to it
+/thanks                hand-curated humans: reviewers, advisors, lenders of servers
+/about /contact        the usual
+/contribute            one page covering compute (-> /at-home), code (-> /code), and mathematics
+/glossary              for readers who arrive without the vocabulary
+```
+
+Notes on the choices: `@` is a legal path character and `/@home` looks good, but `/at-home` is canonical because static-site generators can balk at a directory named `@home`, chat clients try to turn it into a mention, and an `@` inside a printed citation reads ambiguously. Paper URLs use title slugs rather than arXiv ids so they survive preprint-to-journal moves. The volunteer list is machine-generated and potentially enormous; `/thanks` is hand-written and small — different pages for different provenance. No `/donate`: there is no money in this, and a donate link would create an expectation to manage.
 
 ## Someday / future
 

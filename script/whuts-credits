@@ -38,7 +38,7 @@ unfoldings.each do |unfolding|
       verifiers: unfolding[:verifiers]
     }
   )
-  File.write(path, Census::JSONDocument.generate(record))
+  File.write(path, Census::JSONDocument.new(record).generate)
   matched << path
 end
 

@@ -20,7 +20,7 @@ module Census
 
     def to_h = geometry_fields.merge(verdict_fields)
 
-    def to_json_document = JSONDocument.generate(to_h)
+    def to_json_document = JSONDocument.new(to_h).generate
 
     private
 

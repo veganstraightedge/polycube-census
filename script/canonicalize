@@ -1,0 +1,105 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Rewrite shape records in canonical form
+# Usage:
+#
+#   script/canonicalize PATH
+#
+# Arguments.
+#
+#   PATH                      directory to sweep
+#                               default: data
+#
+# Options.
+# Each has a default, so all are optional.
+#
+#   --dry-run                 report what would change and write nothing
+#                               default: write
+#
+# Records are written by several hands: the pipeline, the corona and ring
+# hunts, mirror propagation, and the @home archiver. Canonical form is what
+# makes them agree, so re-running any of them reproduces the same bytes.
+#
+# Safe to interrupt and safe to repeat.
+# Every file is compared as parsed JSON before it is written, so a run that
+# would change a record's content stops instead of writing it. A second run
+# over an already swept tree reports zero.
+#
+# Examples:
+#
+#   script/canonicalize
+#   script/canonicalize --dry-run
+#   script/canonicalize spec/fixtures
+
+require_relative '../lib/census'
+
+# Read options
+arguments = ARGV.dup
+
+def flag? arguments, flag
+  position = arguments.index flag
+  return false if position.nil?
+
+  arguments.delete_at position
+
+  true
+end
+
+# Anything still flag-shaped after the known flags are taken is a typo, and
+# must be caught before the leftovers are read as the PATH argument.
+def check_for_unknown_options arguments
+  unknown = arguments.select { it.start_with? '--' }
+  return if unknown.empty?
+
+  abort "unknown option(s): #{unknown.join ' '}"
+end
+
+def canonical_form path
+  record = JSON.parse File.read(path), symbolize_names: true
+
+  Census::JSONDocument.new(record).generate
+end
+
+# Rename is atomic, so a reader sees either the whole old file or the whole
+# new one. The long-running hunts read from data/ while this sweeps it.
+def write_atomically path, text
+  temporary = "#{path}.canonicalizing"
+
+  File.write  temporary, text
+  File.rename temporary, path
+end
+
+# Extract options
+dry_running = flag? arguments, '--dry-run'
+
+# Check options
+check_for_unknown_options arguments
+
+# Extract arguments
+root = arguments.shift || 'data'
+
+# Check arguments
+abort "unexpected argument(s): #{arguments.join ' '}" unless arguments.empty?
+
+# Sweep
+paths   = Dir.glob File.join(root, '**', 'shape.json')
+changed = 0
+
+paths.each do |path|
+  before = File.read path
+  after  = canonical_form path
+
+  # Only the spelling may move. Content is not this script's business.
+  abort "REFUSED #{path}: canonical form would change the record" unless JSON.parse(after) == JSON.parse(before)
+
+  next if after == before
+
+  write_atomically path, after unless dry_running
+  changed += 1
+end
+
+verb = dry_running ? 'would rewrite' : 'rewrote'
+
+puts "#{verb} #{changed} of #{paths.size} records in #{root}/"
+puts

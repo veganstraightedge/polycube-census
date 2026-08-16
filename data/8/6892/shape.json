@@ -1,15 +1,29 @@
 {
   "id": "8/6892",
   "n": 8,
-  "cells": [[0,0,1],[0,1,1],[1,1,1],[1,2,0],[1,2,1],[1,2,2],[1,3,0],[2,2,2]],
+  "cells": [[0, 0, 1], [0, 1, 1], [1, 1, 1], [1, 2, 0], [1, 2, 1], [1, 2, 2], [1, 3, 0], [2, 2, 2]],
   "symmetry_order": 1,
   "chiral": true,
   "mirror_id": "8/6884",
   "verdict": "tiler",
   "tiles_rotations_only": true,
   "tiles_with_reflections": true,
-  "certificate": {"type":"torus","lattice":[[4,0,0],[1,1,0],[2,0,2]],"placements":[{"rotation":10,"offset":[3,0,1]}]},
+  "certificate": {
+    "lattice": [[4, 0, 0], [1, 1, 0], [2, 0, 2]],
+    "placements": [
+      { "offset": [3, 0, 1], "rotation": 10 }
+    ],
+    "type": "torus"
+  },
   "heesch": null,
-  "budgets": {"box_max_volume":96,"torus_max_index":48},
-  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":{"source":"https://whuts.org/unfolding/40","solver":"Dean Hortin","verifiers":["Kirill Zolotuskiy","Neil Sullivan","r10pez10"]}}
+  "budgets": { "box_max_volume": 96, "torus_max_index": 48 },
+  "credits": {
+    "prior_art": {
+      "solver": "Dean Hortin",
+      "source": "https://whuts.org/unfolding/40",
+      "verifiers": ["Kirill Zolotuskiy", "Neil Sullivan", "r10pez10"]
+    },
+    "solved_by": "polycube-census v0.1.0",
+    "verified_by": null
+  }
 }

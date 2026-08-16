@@ -1,16 +1,23 @@
 {
   "id": "9/8219",
   "n": 9,
-  "cells": [[0,0,0],[0,0,1],[0,0,2],[0,1,0],[0,1,2],[0,2,0],[0,2,1],[1,1,1],[1,1,2]],
+  "cells": [[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 1, 0], [0, 1, 2], [0, 2, 0], [0, 2, 1], [1, 1, 1], [1, 1, 2]],
   "symmetry_order": 1,
   "chiral": true,
   "mirror_id": "9/8220",
   "verdict": "non_tiler",
   "tiles_rotations_only": false,
   "tiles_with_reflections": false,
-  "certificate": {"type":"heesch","heesch":1,"refutation":"cnf/corona2.drat","adjacency":"26","refutation_sha256":"3cc41ade5700f4c1b0f258b9cb3b8d3af8c4a3d2c5ffe688e3f52c3241a44106","solved_with":"kissat 4.0.4; proof is the drat-trim-verified core of the original 21 GB run (8.4 h audit)"},
+  "certificate": {
+    "adjacency": "26",
+    "heesch": 1,
+    "refutation": "cnf/corona2.drat",
+    "refutation_sha256": "3cc41ade5700f4c1b0f258b9cb3b8d3af8c4a3d2c5ffe688e3f52c3241a44106",
+    "solved_with": "kissat 4.0.4; proof is the drat-trim-verified core of the original 21 GB run (8.4 h audit)",
+    "type": "heesch"
+  },
   "heesch": 1,
-  "budgets": {"box_max_volume":128,"corona_depth":2,"torus_max_index":72},
-  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null},
-  "reached": {"corona_refuted":2}
+  "budgets": { "box_max_volume": 128, "corona_depth": 2, "torus_max_index": 72 },
+  "credits": { "prior_art": null, "solved_by": "polycube-census v0.1.0", "verified_by": null },
+  "reached": { "corona_refuted": 2 }
 }

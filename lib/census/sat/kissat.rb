@@ -11,6 +11,11 @@ module Census
       SATISFIABLE = 10
       UNSATISFIABLE = 20
 
+      # kissat exits zero when a limit stopped it before it decided anything.
+      # That is a third answer, not a failure, and it is what makes a cube
+      # splittable: nobody could finish this, so cut it in half.
+      UNDECIDED = 0
+
       # instance_path keeps the generated CNF on disk — a DRAT proof is only
       # checkable against the exact formula it refutes.
       #
@@ -34,11 +39,47 @@ module Census
         end
       end
 
+      # Solve a stored formula under a cube (a partial assignment appended as
+      # unit clauses). Returns true variables for SAT, nil for UNSAT — the
+      # distributed workers' entry point for cube units.
+      #
+      # With proof_path, the augmented formula is written to disk first, because
+      # kissat only emits a DRAT proof for a formula handed to it as a file. The
+      # formula is not kept: it is reproducible from cnf_path and the cube, so a
+      # checker can rebuild the exact thing the proof refutes without it being
+      # shipped anywhere.
+      # With a timeout, an unfinished cube comes back :undecided rather than
+      # running forever on a volunteer's laptop.
+      def self.solve_cube(cnf_path:, cube:, proof_path: nil, timeout: nil)
+        return streamed_cube(cnf_path:, cube:) unless proof_path
+
+        Tempfile.create(["census-cube", ".cnf"]) do |file|
+          CubeFile.stream_augmented(cnf_path:, cube:, io: file)
+          file.flush
+          run(file.path, proof_path:, timeout:)
+        end
+      end
+
+      def self.streamed_cube(cnf_path:, cube:)
+        output = IO.popen([ENV.fetch("CENSUS_SOLVER", "kissat")], "r+") do |io|
+          CubeFile.stream_augmented(cnf_path:, cube:, io:)
+          io.close_write
+          io.read
+        end
+        case output[/^s (\w+)/, 1]
+        when "SATISFIABLE" then true_variables(output)
+        when "UNSATISFIABLE" then nil
+        else raise "solver returned neither SAT nor UNSAT for #{cnf_path}"
+        end
+      end
+
       # With a progress IO, kissat runs un-quieted and its periodic statistics
       # lines stream there live; the verdict lines are parsed as usual.
-      def self.run(path, proof_path: nil, progress: nil)
-        solver = ENV.fetch("CENSUS_SOLVER", "kissat")
-        command = progress ? [solver, path] : [solver, "--quiet", path]
+      def self.run(path, proof_path: nil, progress: nil, timeout: nil)
+        command = [ENV.fetch("CENSUS_SOLVER", "kissat")]
+        command << "--quiet" unless progress
+        command << "--time=#{timeout}" if timeout
+        command << path
         command << proof_path if proof_path
         return streamed(command, progress) if progress
 
@@ -64,7 +105,8 @@ module Census
 
       def self.verdict(exitstatus, output)
         case exitstatus
-        when SATISFIABLE then true_variables(output)
+        when SATISFIABLE   then true_variables(output)
+        when UNDECIDED     then :undecided
         when UNSATISFIABLE then nil
         else raise "kissat failed with exit status #{exitstatus}"
         end

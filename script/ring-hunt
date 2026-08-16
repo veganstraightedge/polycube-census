@@ -67,7 +67,7 @@ while index <= max_index
         budgets: fresh[:budgets].merge(torus_max_index: index),
         credits: fresh[:credits].merge(solved_by: "polycube-census v#{Census::VERSION}")
       )
-      File.write(path, Census::JSONDocument.generate(fresh))
+      File.write(path, Census::JSONDocument.new(fresh).generate)
     end
     puts "#{timestamp}  TILING FOUND at index #{index} — verified and stamped. Chainmail tiles space."
     exit 0
@@ -78,7 +78,7 @@ while index <= max_index
     File.write("#{hunt_directory}/shard-#{shard_index}-of-#{shard_count}.json", "#{JSON.generate(state)}\n")
   else
     record[:budgets] = record[:budgets].merge(torus_max_index: index)
-    File.write(path, Census::JSONDocument.generate(record))
+    File.write(path, Census::JSONDocument.new(record).generate)
   end
   puts "#{timestamp}  index #{index} refuted by this shard"
   index += shape.size

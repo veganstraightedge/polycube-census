@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Compare what volunteers returned against what the census already knows
+# Usage:
+#
+#   script/at_home/cross_check
+#
+# Takes no arguments.
+#
+# Every accepted result is verified here a second time, on its own, without
+# trusting the coordinator that already accepted it.
+# Then its verdict is checked against the answer in data/.
+#
+# Exits 1 on any disagreement, so it can guard a merge.
+#
+# Examples:
+#
+#   script/at_home/cross_check
+
+require 'pg'
+require_relative '../../lib/census'
+
+def root         = File.expand_path '../../data', __dir__
+def database_url = ENV.fetch 'POLYCUBE_AT_HOME_URL', 'postgres:///polycube_at_home'
+
+# What the census already believes about a shape.
+def census_record shape_id
+  JSON.parse File.read(File.join(root, shape_id, 'shape.json')), symbolize_names: true
+end
+
+# Everything a client returned that the coordinator accepted.
+def accepted_results
+  PG.connect(database_url).exec <<~SQL
+    SELECT units.shape_id, results.verdict, results.payload, clients.handle
+      FROM results
+           JOIN units   ON units.id   = results.unit_id
+           JOIN clients ON clients.id = results.client_id
+     WHERE results.verified IS TRUE
+     ORDER BY units.shape_id
+  SQL
+end
+
+# A volunteer said this shape tiles.
+# The certificate has to hold up on its own, and the census has to agree.
+def check_tiler shape_id, certificate, agreements, failures
+  record = census_record shape_id
+  shape  = Census::Polycube.new cells: record[:cells]
+  valid  = Census::Verifier.new(certificate:, shape:).valid?
+  agreed = record[:verdict] == 'tiler'
+
+  failures << "#{shape_id}: certificate does not verify"                       unless valid
+  failures << "#{shape_id}: census says #{record[:verdict]}, client says tiler" unless agreed
+  agreements[:tiler_confirmed] += 1 if valid && agreed
+
+  # Two certificates can both be right and still differ.
+  # A client may find a box where the census found a torus.
+  same_kind = certificate[:type] == record.dig(:certificate, :type)
+  agreements[same_kind ? :same_certificate_type : :different_certificate_type] += 1
+end
+
+# A volunteer said this shape beat its budgets.
+# The census must not hold a certificate for it.
+def check_exhausted shape_id, agreements, failures
+  record = census_record shape_id
+
+  if record[:certificate]
+    failures << "#{shape_id}: census has a certificate, client reported exhausted"
+  else
+    agreements[:exhausted_confirmed] += 1
+  end
+end
+
+agreements = Hash.new 0
+failures   = []
+results    = accepted_results
+
+results.each do |result|
+  shape_id = result['shape_id']
+  payload  = JSON.parse result['payload'], symbolize_names: true
+
+  case result['verdict']
+  when 'tiler'     then check_tiler shape_id, payload[:certificate], agreements, failures
+  when 'exhausted' then check_exhausted shape_id, agreements, failures
+  end
+end
+
+clients = results.map { it['handle'] }.uniq.size
+
+puts "cross checked #{results.count} accepted results from #{clients} clients"
+agreements.sort.each { |kind, count| puts "  #{kind}: #{count}" }
+
+if failures.empty?
+  puts 'no disagreements with data/'
+  puts
+else
+  puts 'DISAGREEMENTS:'
+  failures.each { puts "  #{it}" }
+  puts
+
+  exit 1
+end

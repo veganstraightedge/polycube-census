@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Ask a volunteer to hand over the proof behind a refutation
+# Usage:
+#
+#   script/at_home/audit
+#
+# Options.
+# Each has a default, so all are optional.
+#
+#   --want DIGEST             ask for one proof, by its sha256
+#   --want-all                ask for every proof still only claimed
+#                               default: list what is claimed and ask for nothing
+#
+# A refutation arrives naming a proof it does not ship: the worker keeps the
+# bytes and reports the digest. That binds them to an artifact, and this is
+# how the promise gets called in.
+#
+# Nothing happens immediately. A client polls rather than listens, so the
+# request rides the reply to its next lease, and the proof arrives whenever
+# that volunteer next asks for work. A volunteer who never returns leaves the
+# claim standing on their word, which is what the listing is for.
+#
+# On arrival the coordinator rebuilds the formula from its own CNF and cube,
+# and drat-trim decides. Nothing the sender supplies is taken as the question.
+#
+# Examples:
+#
+#   script/at_home/audit
+#   script/at_home/audit --want 6e8f3aa6e5cd1134ac162f6ccd0be67a9459a4b2fffe7e618a0a5ba50e0ae807
+#   script/at_home/audit --want-all
+
+require_relative '../../lib/census'
+
+# Read options
+arguments = ARGV.dup
+
+def option arguments, flag
+  position = arguments.index flag
+  return nil if position.nil?
+
+  arguments.slice!(position, 2).last
+end
+
+def flag? arguments, flag
+  position = arguments.index flag
+  return false if position.nil?
+
+  arguments.delete_at position
+
+  true
+end
+
+def check_for_unknown_options arguments
+  return if arguments.empty?
+
+  abort "unknown option(s): #{arguments.join ' '}"
+end
+
+def megabytes(bytes) = (bytes / 1_048_576.0).round 1
+
+def ask coordinator, digest
+  abort "no claimed proof with digest #{digest}" unless coordinator.want_proof digest
+
+  puts "asked for #{digest[0, 12]}"
+end
+
+def report store
+  puts store.proof_states.inspect
+  puts
+
+  claimed = store.claimed_proofs
+
+  if claimed.empty?
+    puts 'no proofs are standing on a volunteer\'s word'
+
+    return
+  end
+
+  puts "#{claimed.size} proof(s) claimed but not held:"
+  puts
+
+  claimed.each do |proof|
+    puts "  #{proof[:sha256]}"
+    puts "    shape:    #{proof[:shape_id]}"
+    puts "    size:     #{megabytes proof[:bytes]} MB"
+    puts "    claimed:  #{proof[:claimed_at]} by #{proof[:handle]}"
+    puts
+  end
+
+  puts 'ask for one with: script/at_home/audit --want DIGEST'
+end
+
+# Extract options
+wanting     = option arguments, '--want'
+wanting_all = flag?  arguments, '--want-all'
+
+# Check options
+check_for_unknown_options arguments
+abort 'pass one of --want or --want-all, not both' if wanting && wanting_all
+
+store       = Census::AtHome::Store.new
+coordinator = Census::AtHome::Coordinator.new(store:)
+
+if wanting
+  ask coordinator, wanting
+elsif wanting_all
+  digests = store.claimed_proofs.map { it[:sha256] }
+  digests.each { coordinator.want_proof it }
+
+  puts "asked for #{digests.size} proof(s)"
+else
+  report store
+end
+
+store.close
+puts

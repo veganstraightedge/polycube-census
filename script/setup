@@ -5,3 +5,11 @@ cd "$(dirname "$0")/.."
 
 brew bundle
 bundle install
+
+# drat-trim has no Homebrew formula, so it is vendored and built here rather
+# than installed. Only the coordinator needs it: volunteers produce proofs and
+# report their digests, and the checking happens on a machine we control.
+if [ ! -x vendor/drat-trim/drat-trim ]; then
+  git clone --depth 1 https://github.com/marijnheule/drat-trim.git vendor/drat-trim
+  make -C vendor/drat-trim drat-trim
+fi

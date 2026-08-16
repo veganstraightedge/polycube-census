@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Review the display names volunteers asked to be credited by
+# Usage:
+#
+#   script/at_home/moderate
+#
+# Options.
+# Each has a default, so all are optional.
+#
+#   --approve HANDLE          credit this volunteer by their display name
+#   --reject HANDLE           keep crediting them by their handle
+#                               default: list what is waiting and change nothing
+#
+# Two identities, on purpose.
+# A handle is the scheduling key: opaque, permanent, never shown.
+# A display name is what may appear in a shape record's credits.
+#
+# Nothing bridges the two without a human, because the archive is public,
+# citable, and kept in git forever. An unapproved name is not withheld from
+# the volunteer, it simply is not used: the credit falls back to the handle.
+#
+# Approving is reversible. The credit string is computed when a record is
+# archived, so rejecting a name later stops it being used again, and any
+# record already written can be rewritten by re-running the archiver.
+#
+# Examples:
+#
+#   script/at_home/moderate
+#   script/at_home/moderate --approve client-laptop-3f9a1c22
+#   script/at_home/moderate --reject client-laptop-3f9a1c22
+
+require_relative '../../lib/census'
+
+# Read options
+arguments = ARGV.dup
+
+def option arguments, flag
+  position = arguments.index flag
+  return nil if position.nil?
+
+  arguments.slice!(position, 2).last
+end
+
+def check_for_unknown_options arguments
+  return if arguments.empty?
+
+  abort "unknown option(s): #{arguments.join ' '}"
+end
+
+def moderate store, handle, state
+  changed = store.moderate_display_name(handle:, state:)
+  abort "no client with handle #{handle}" if changed.zero?
+
+  puts "#{handle}: #{state}"
+end
+
+def list store
+  pending = store.pending_display_names
+
+  if pending.empty?
+    puts 'nothing waiting'
+
+    return
+  end
+
+  puts "#{pending.size} name(s) waiting:"
+  puts
+
+  pending.each do |client|
+    puts "  #{client[:display_name]}"
+    puts "    handle:   #{client[:handle]}"
+    puts "    contact:  #{client[:contact] || 'none given'}"
+    puts "    results:  #{client[:accepted]} accepted, #{client[:rejected]} rejected"
+    puts "    since:    #{client[:first_seen]}"
+    puts
+  end
+
+  puts 'approve with: script/at_home/moderate --approve HANDLE'
+end
+
+# Extract options
+approving = option arguments, '--approve'
+rejecting = option arguments, '--reject'
+
+# Check options
+check_for_unknown_options arguments
+abort 'pass one of --approve or --reject, not both' if approving && rejecting
+
+store = Census::AtHome::Store.new
+
+if approving
+  moderate store, approving, 'approved'
+elsif rejecting
+  moderate store, rejecting, 'rejected'
+else
+  list store
+end
+
+store.close
+puts

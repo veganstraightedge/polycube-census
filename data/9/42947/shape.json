@@ -1,16 +1,23 @@
 {
   "id": "9/42947",
   "n": 9,
-  "cells": [[0,0,1],[0,1,0],[0,1,1],[0,1,2],[1,0,0],[1,0,1],[1,1,0],[1,2,0],[2,0,1]],
+  "cells": [[0, 0, 1], [0, 1, 0], [0, 1, 1], [0, 1, 2], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 2, 0], [2, 0, 1]],
   "symmetry_order": 3,
   "chiral": true,
   "mirror_id": "9/42969",
   "verdict": "non_tiler",
   "tiles_rotations_only": false,
   "tiles_with_reflections": false,
-  "certificate": {"type":"heesch","heesch":1,"adjacency":"26","refutation":"cube-and-conquer ledgers (colo): c42947-cubes/blade/blade2 .results.jsonl","refutation_sha256":null,"solved_with":"cube-and-conquer on kissat 4.0.4 (colo, 50 cores): 4096 sign-cubes + 475 clause-branch + 8225 clause-branch cubes, 12861 ledger entries, all UNSAT, zero SATISFIABLE; ledger-backed, per-cube DRAT campaign pending"},
+  "certificate": {
+    "adjacency": "26",
+    "heesch": 1,
+    "refutation": "cube-and-conquer ledgers (colo): c42947-cubes/blade/blade2 .results.jsonl",
+    "refutation_sha256": null,
+    "solved_with": "cube-and-conquer on kissat 4.0.4 (colo, 50 cores): 4096 sign-cubes + 475 clause-branch + 8225 clause-branch cubes, 12861 ledger entries, all UNSAT, zero SATISFIABLE; ledger-backed, per-cube DRAT campaign pending",
+    "type": "heesch"
+  },
   "heesch": 1,
-  "budgets": {"box_max_volume":96,"corona_depth":2,"torus_max_index":72},
-  "credits": {"solved_by":"polycube-census v0.1.0","verified_by":null,"prior_art":null},
-  "reached": {"corona_refuted":2}
+  "budgets": { "box_max_volume": 96, "corona_depth": 2, "torus_max_index": 72 },
+  "credits": { "prior_art": null, "solved_by": "polycube-census v0.1.0", "verified_by": null },
+  "reached": { "corona_refuted": 2 }
 }
