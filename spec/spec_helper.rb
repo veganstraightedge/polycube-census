@@ -6,6 +6,26 @@ ENV["POLYCUBE_AT_HOME_URL"] ||= "postgres:///polycube_at_home_test"
 
 require_relative "../lib/census"
 
+# Whether a coordinator database is actually there.
+#
+# Building a Store proves nothing, because the pool opens connections lazily.
+# The old guard did exactly that and so never skipped anything, which turned
+# every @home spec into a failure on machines without Postgres. This runs a
+# real query instead, once, and remembers the answer.
+module CoordinatorDatabase
+  def self.reachable?
+    return @reachable unless @reachable.nil?
+
+    store = Census::AtHome::Store.new
+    store.status
+    store.close
+    @reachable = true
+  rescue StandardError => error
+    warn "coordinator database unavailable (#{error.class}): @home specs will skip"
+    @reachable = false
+  end
+end
+
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
     expectations.include_chain_clauses_in_custom_matcher_descriptions = true
@@ -21,9 +41,7 @@ RSpec.configure do |config|
   # polycubing@home specs need a live coordinator database; skip them when
   # one isn't configured so the core suite runs anywhere.
   config.before(:each, :home) do
-    Census::AtHome::Store.new.close
-  rescue StandardError => error
-    skip "coordinator database unavailable (#{error.class}) — run script/at_home/setup"
+    skip "coordinator database unavailable — run script/at_home/setup" unless CoordinatorDatabase.reachable?
   end
 
   # Proof checking needs the vendored drat-trim, which has no Homebrew formula
