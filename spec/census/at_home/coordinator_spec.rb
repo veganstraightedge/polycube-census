@@ -314,7 +314,7 @@ RSpec.describe Census::AtHome::Coordinator, :home do
       coordinator.want_proof(digest)
     end
 
-    it "checks a delivered proof against the formula it rebuilds itself" do
+    it "checks a delivered proof against the formula it rebuilds itself", :checker do
       claim_and_want
 
       answer = coordinator.deliver_proof(sha256: digest, bytes:)
@@ -353,7 +353,7 @@ RSpec.describe Census::AtHome::Coordinator, :home do
     # formula. It checks out on its own terms and against ours it does not.
     # A cube only adds unit clauses, so it can never turn its base formula
     # satisfiable — the lie has to be about which formula was solved.
-    it "refutes a real proof aimed at a formula the coordinator did not hand out" do
+    it "refutes a real proof aimed at a formula the coordinator did not hand out", :checker do
       claim_and_want(cnf_path: "spec/fixtures/proof/satisfiable.cnf")
 
       answer = coordinator.deliver_proof(sha256: digest, bytes:)

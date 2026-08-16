@@ -18,4 +18,11 @@ jobs:
           git clone --depth 1 https://github.com/arminbiere/kissat /tmp/kissat
           cd /tmp/kissat && ./configure && make -j
           echo "/tmp/kissat/build" >> "$GITHUB_PATH"
+      # drat-trim has no Homebrew formula either, so script/setup vendors it and
+      # CI does the same. Proof-checking specs skip when it is absent, so its
+      # absence must fail here instead of quietly thinning the suite.
+      - run: |
+          git clone --depth 1 https://github.com/marijnheule/drat-trim.git vendor/drat-trim
+          make -C vendor/drat-trim drat-trim
+          test -x vendor/drat-trim/drat-trim || { echo "drat-trim did not build"; exit 1; }
       - run: script/cibuild

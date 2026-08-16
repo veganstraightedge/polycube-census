@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Census::SAT::DratTrim do
+RSpec.describe Census::SAT::DratTrim, :checker do
   let(:contradiction) { "spec/fixtures/proof/contradiction.cnf" }
   let(:proof)         { "spec/fixtures/proof/contradiction.drat" }
   let(:satisfiable)   { "spec/fixtures/proof/satisfiable.cnf" }
@@ -35,7 +35,4 @@ RSpec.describe Census::SAT::DratTrim do
       .to raise_error(described_class::Missing, /drat-trim not found/)
   end
 
-  it "is available in this checkout" do
-    expect(described_class).to be_available
-  end
 end

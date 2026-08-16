@@ -25,6 +25,14 @@ RSpec.configure do |config|
   rescue StandardError => error
     skip "coordinator database unavailable (#{error.class}) — run script/at_home/setup"
   end
+
+  # Proof checking needs the vendored drat-trim, which has no Homebrew formula
+  # and is built by script/setup. Skipping keeps a fresh clone from drowning in
+  # failures. CI asserts the binary exists before it runs any spec, so a broken
+  # build there is loud rather than quietly skipped into a green run.
+  config.before(:each, :checker) do
+    skip "drat-trim not built — run script/setup" unless Census::SAT::DratTrim.available?
+  end
   config.order = :random
   Kernel.srand config.seed
 end
